@@ -28,6 +28,19 @@
         </developer>
     </developers>
 
+    <distributionManagement>
+        <repository>
+            <id>descoped</id>
+            <name>Descoped Releases</name>
+            <url>https://repository.musific.com/nexus/content/repositories/descoped/</url>
+        </repository>
+        <snapshotRepository>
+            <id>descoped-snapshots</id>
+            <name>Descoped Snapshots</name>
+            <url>https://repository.musific.com/nexus/content/repositories/descoped-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
     <scm>
         <connection>scm:git:git://github.com/descoped/descoped-devmode-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:descoped/descoped-devmode-plugin.git</developerConnection>
