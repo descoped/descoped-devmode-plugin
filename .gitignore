@@ -1,0 +1,11 @@
+# Add any directories, files, or patterns you don't want to be tracked by version control
+/.idea/
+/target/
+
+/dependency-reduced-pom.xml
+/logs/
+
+*.iml
+/pom.xml.releaseBackup
+/release.properties
+
