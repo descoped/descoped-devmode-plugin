@@ -54,6 +54,6 @@ public class DescopedWebDeveloperModeMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException {
         getLog().info("Hello: " + outputDirectory);
 
-        exec(Echo.class);
+//        exec(Echo.class);
     }
 }
