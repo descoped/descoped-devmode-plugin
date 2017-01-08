@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.apache.maven.plugin.my.unit</groupId>
+    <groupId>io.descoped.plugins.devmode.mojo.mock</groupId>
     <artifactId>project-to-test</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
@@ -22,10 +22,14 @@
         <plugins>
             <plugin>
                 <groupId>io.descoped.mojo</groupId>
-                <artifactId>maven-devmode-plugin</artifactId>
+                <artifactId>web-devmode-plugin</artifactId>
                 <version>1.0.0-SNAPSHOT</version>
                 <configuration>
                     <outputDirectory>target/test-harness/project-to-test</outputDirectory>
+                    <webContent>src/main/resources/webapp</webContent>
+                    <mainClass>io.descoped.plugins.devmode.test.Echo</mainClass>
+
+                    <project implementation="io.descoped.plugins.devmode.test.MojoMavenProjectStub" />
                 </configuration>
             </plugin>
         </plugins>

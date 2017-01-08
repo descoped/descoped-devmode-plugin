@@ -6,13 +6,16 @@ import org.apache.maven.plugin.logging.SystemStreamLog;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * Created by oranheim on 04/01/2017.
  */
 public class CommonUtil {
 
-    private static final Log log = new SystemStreamLog();
+    private static final Log LOGGER = new SystemStreamLog();
 
     private static ThreadLocal<OutputStream> outputLocal = new ThreadLocal<OutputStream>() {
         private OutputStream output = null;
@@ -103,6 +106,38 @@ public class CommonUtil {
         OutputStream out = CommonUtil.newOutputStream();
         CommonUtil.writeInputToOutputStream(in, out);
         log.info(msg + ": " + out);
+    }
+    
+    public static void printEnvVars() {
+        LOGGER.info("------------> Environment Varaibles <------------");
+        Map<String, String> env = System.getenv();
+        for(Map.Entry<String,String> e : env.entrySet()) {
+            LOGGER.info(String.format("%s=%s", e.getKey(), e.getValue()));
+        }
+        LOGGER.info("------------> System Properties <------------");
+        Properties props = System.getProperties();
+        for(Map.Entry<Object, Object> e : props.entrySet()) {
+            LOGGER.info(String.format("%s=%s", e.getKey(), e.getValue()));
+        }
+        LOGGER.info("------------> -o-o-o-o-o-o-o <------------");
+    }
+
+    public static boolean isMojoRunningInTestingHarness() {
+        try {
+            Class<?> mojo = Class.forName("org.apache.maven.plugin.testing.AbstractMojoTestCase");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
+    public static String printList(List<?> list) {
+        if (list == null || list.isEmpty()) return "(empty)";
+        StringBuffer buf = new StringBuffer();
+        for(Object obj : list) {
+            buf.append(obj.toString() + "\n");
+        }
+        return buf.toString();
     }
 
 }

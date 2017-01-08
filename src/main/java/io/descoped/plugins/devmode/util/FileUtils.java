@@ -33,7 +33,7 @@ import java.nio.file.Paths;
  */
 public class FileUtils {
 
-    private static final Log log = new SystemStreamLog();
+    private static final Log LOGGER = new SystemStreamLog();
 
     /* added by Ove Ranheim */
     private static Path currentPath;
@@ -46,9 +46,9 @@ public class FileUtils {
         if (!Files.isDirectory(directory)) {
             Path dir;
             if ((dir = Files.createDirectories(directory)) != null) {
-                log.info(String.format("Created directory: %s", dir.toString()));
+                LOGGER.info(String.format("Created directory: %s", dir.toString()));
             } else {
-                log.info(String.format("Unable to create directory: %s", dir.toString()));
+                LOGGER.info(String.format("Unable to create directory: %s", dir.toString()));
             }
         }
     }
@@ -92,7 +92,7 @@ public class FileUtils {
             }
         } finally {
             out.close();
-            log.info(String.format("Wrote new file: %s", file.toString()));
+            LOGGER.info(String.format("Wrote new file: %s", file.toString()));
         }
     }
 
@@ -113,7 +113,7 @@ public class FileUtils {
             }
         } finally {
             raf.close();
-            log.info(String.format("Removed file: %s", file.toString()));
+            LOGGER.info(String.format("Removed file: %s", file.toString()));
         }
     }
 

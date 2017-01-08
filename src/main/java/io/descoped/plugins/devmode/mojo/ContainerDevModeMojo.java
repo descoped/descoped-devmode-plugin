@@ -1,48 +1,112 @@
 package io.descoped.plugins.devmode.mojo;
 
+import io.descoped.plugins.devmode.util.CommonUtil;
 import io.descoped.plugins.devmode.util.FileUtils;
+import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.project.MavenProject;
+import org.apache.maven.repository.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.repository.RemoteRepository;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Descoped Web Developer Plugin enables real time editing of source file when working on your project sources.
  *
- * @goal run
- * @phase process-classes
+ * todo:
+ * - get classpath
+ * - remove compile classes path from classpath
+ * - add src directory to class path
+ * - exec descoped-container with custom classpath
  */
-@Mojo( name = "DescopedWebDeveloperPlugin")
-public class DescopedWebDeveloperModeMojo extends AbstractMojo {
+@Mojo( name = "run", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
+public class ContainerDevModeMojo extends AbstractMojo {
 
     private static Log LOGGER;
 
     /**
-     * Location of the file.
-     *
-     * @parameter expression="project.build.directory"
-     * @required
+     * Output directory location
      */
+    @Parameter( property = "outputDirectory", required = true)
     private File outputDirectory;
+
+    /**
+     * Web content location in src
+     */
+    @Parameter( property = "webContent")
+    private String webContent;
+
+    /**
+     * Main-class to execute
+     */
+    @Parameter( property = "mainClass", defaultValue = "io.descoped.container.Main")
+    private String mainClass;
+
+    @Component
+    private RepositorySystem repoSystem;
+
+    @Parameter( defaultValue = "${repositorySystemSession}", readonly = true, required = true )
+    private RepositorySystemSession repoSession;
+
+    @Parameter( defaultValue = "${project.remoteProjectRepositories}", readonly = true, required = true )
+    private List<RemoteRepository> repositories;
+
+
+    /**
+     * The maven project instance
+     */
+    @Component
+    private MavenProject project;
 
     private void checkLogger() {
         Logger.setLOG(getLog());
         LOGGER = Logger.LOG;
+        CommonUtil.printEnvVars();
     }
 
     public void execute() throws MojoExecutionException {
         checkLogger();
 
-        LOGGER.info("Hello: " + outputDirectory);
+        try {
+            LOGGER.info("getBasedir: " + project.getBasedir());
+            LOGGER.info("getCompileClasspathElements: " + CommonUtil.printList(project.getCompileClasspathElements()));
+            LOGGER.info("getDependencies: " + CommonUtil.printList(project.getDependencies()));
+//            LOGGER.info("classpath: " + classpath);
+
+        } catch (DependencyResolutionRequiredException e) {
+            throw new MojoExecutionException("", e);
+        }
+
+        /*
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter your name: ");
+        String username = scanner.next();
+        LOGGER.info("Username: " + username);
+        */
+
+        LOGGER.info("outputDirectory: " + outputDirectory);
+        LOGGER.info("webContent: " + webContent);
+        LOGGER.info("mainClass: " + mainClass);
+
+        Map<Object, Object> map = getPluginContext();
+        if (map != null) {
+            for (Map.Entry<Object, Object> e : map.entrySet()) {
+                LOGGER.info("---> key: " + e.getKey() + " => " + e.getValue());
+            }
+        }
 
         validateOutputDirectory();
 
-        exec(resolveClass("io.descoped.plugins.devmode.test.Echo"));
+//        exec(resolveClass(mainClass));
     }
 
     private void exec(Class<?> mainClass) throws MojoExecutionException {
