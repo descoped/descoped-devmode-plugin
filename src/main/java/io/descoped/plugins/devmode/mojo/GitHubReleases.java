@@ -35,8 +35,13 @@ public class GitHubReleases {
         this.releaseUrl = releaseUrl;
         this.releaseLinkMatch = releaseLinkMatch;
 
-        gitHubLatestVersionUrl = downloadLatestVersionURL();
-        gitHubReleaseUrlList = downloadReleaseURLs();
+        try {
+            gitHubLatestVersionUrl = downloadLatestVersionURL();
+            gitHubReleaseUrlList = downloadReleaseURLs();
+        } catch (MojoExecutionException e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     private List<String> grabHtmlLinks(String html, String hrefContainsToken) throws IOException {
@@ -44,6 +49,8 @@ public class GitHubReleases {
 
         String MATCHER = "href=\"(.*?)\"";
         Pattern p = Pattern.compile(MATCHER, Pattern.DOTALL);
+        Pattern p2 = Pattern.compile("(\\d+([.]\\d+)+)");
+
 
         BufferedReader reader = new BufferedReader(new StringReader(html));
         String line;
@@ -53,6 +60,14 @@ public class GitHubReleases {
                 if (m.groupCount() == 1) {
                     String match = m.group(1);
                     if (hrefContainsToken != null) {
+//                        Matcher m2 = p2.matcher(match);
+//                        if (m2.find()) {
+//                            System.out.println("-------------------> " + m2.groupCount());
+//                            for(int n = 0; n<=m2.groupCount(); n++) {
+//                                String ss = m2.group(n);
+//                                System.out.println("---------------------> " + ss);
+//                            }
+//                        }
                         if (match.contains(hrefContainsToken)) {
                             links.add(match);
                         }
@@ -82,9 +97,9 @@ public class GitHubReleases {
                 }
             }
         } catch (IOException e) {
-            new MojoExecutionException("Error resolving Download URL for Dcevm", e);
+            new MojoExecutionException("Error resolving Download URL", e);
         }
-        throw new MojoExecutionException("Unable to resolve Download URL for Dcevm");
+        throw new MojoExecutionException("Unable to resolve Download URL");
     }
 
     private List<GitHubUrl> downloadReleaseURLs() throws MojoExecutionException {
@@ -100,9 +115,9 @@ public class GitHubReleases {
             }
             return _links;
         } catch (IOException e) {
-            new MojoExecutionException("Error resolving Download URL for Dcevm", e);
+            new MojoExecutionException("Error resolving Download URL", e);
         }
-        throw new MojoExecutionException("Unable to resolve Download URL for Dcevm");
+        throw new MojoExecutionException("Unable to resolve Download URL");
     }
 
     public GitHubUrl getLatestVersionUrl() {
