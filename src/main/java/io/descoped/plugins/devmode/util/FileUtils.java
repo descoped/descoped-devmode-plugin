@@ -25,6 +25,9 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Common file utilities.
@@ -147,6 +150,17 @@ public class FileUtils {
         }
         return true;
     }
+
+    public static void chmodOwnerExec(File file) throws IOException {
+        Set<PosixFilePermission> perms = new HashSet<>();
+        perms.add(PosixFilePermission.OWNER_READ);
+        perms.add(PosixFilePermission.GROUP_WRITE);
+        perms.add(PosixFilePermission.OWNER_EXECUTE);
+        perms.add(PosixFilePermission.OWNER_WRITE);
+        perms.add(PosixFilePermission.GROUP_READ);
+        Files.setPosixFilePermissions(file.toPath(), perms);
+    }
+
     /* eol - added by Ove Ranheim */
 
     /**

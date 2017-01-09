@@ -147,6 +147,7 @@ public class ContainerDevModeMojo extends AbstractMojo {
         if (installationFile != null) {
             installDcevm(installationFile);
         }
+        LOGGER.info("------------------------->>");
 
         exec(mainClass);
     }
@@ -191,13 +192,47 @@ public class ContainerDevModeMojo extends AbstractMojo {
         return null;
     }
 
+    private void batchAddComments(StringBuffer bash) {
+        bash.append("echo \"\"\n");
+        bash.append("echo \"------------------- IMPORTANT NOTICE --------------------").append("\"\n");
+        bash.append("echo \"Make sure you close all JVM Processes before you proceed!").append("\"\n");
+        bash.append("echo \"---------------------------------------------------------").append("\"\n");
+        bash.append("echo \"\"\n");
+        bash.append("echo \"* JavaHome: ").append(System.getProperty("java.home")).append("\"\n");
+        bash.append("echo \"* Install DCEVM as AltJVM").append("\"\n");
+        bash.append("echo \"* Please read the DCEVM documentation at https://github.com/dcevm/dcevm/blob/master/README.md").append("\"\n\n");
+        bash.append("echo \"\"\n");
+    }
+
+    private StringBuffer batchFileBufferDcevm(String installationFile) {
+        StringBuffer bash = new StringBuffer();
+        bash.append("#!/bin/sh\n\n");
+        batchAddComments(bash);
+        bash.append("cd ").append(System.getProperty("java.home")).append("\n");
+        bash.append("sudo bash -c ").append("'");
+        bash.append(getJavaHomeExecutable()).append(" ");
+        bash.append("-jar ");
+        bash.append(installationFile).append("'\n");
+        return bash;
+    }
+
     private void installDcevm(String installationFile) throws MojoExecutionException {
         try {
             List<String> args = new ArrayList<>();
+            args.add(getJavaHomeExecutable());
             args.add("-jar");
             args.add(installationFile);
             LOGGER.info("Install Dcevm: " + installationFile);
-            exec(System.getProperty("java.home"), args, true, false, true);
+
+            StringBuffer bash = batchFileBufferDcevm(installationFile);
+
+            File bashFile = new File(FileUtils.getCurrentPath().toString() + "/target/installDcev.sh");
+            FileUtils.writeContent(bashFile, bash.toString());
+            FileUtils.chmodOwnerExec(bashFile);
+
+            LOGGER.info("\n" + bash.toString());
+
+            exec(FileUtils.getCurrentPath().toString(), args, false, false, true);
             LOGGER.info("Installation is completed!");
         } catch (IOException | InterruptedException e) {
             throw new MojoExecutionException("Error installing Dcevm!", e);
@@ -220,16 +255,21 @@ public class ContainerDevModeMojo extends AbstractMojo {
         return pid;
     }
 
-    private void exec(String execDirectory, List<String> args, boolean sudo, boolean waitFor, boolean printCommand) throws IOException, InterruptedException {
+    private String getJavaHomeExecutable() {
         String separator = System.getProperty("file.separator");
         String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
+        return path;
+    }
 
-        args.add(0, path);
-        if (sudo) {
-            args.add(0, "-c");
-            args.add(0, "bash");
-            args.add(0, "sudo");
-        }
+    private void exec(String execDirectory, List<String> args, boolean sudo, boolean waitFor, boolean printCommand) throws IOException, InterruptedException {
+//        String path = getJavaHomeExecutable();
+//
+//        args.add(0, path);
+//        if (sudo) {
+//            args.add(0, "-c");
+//            args.add(0, "bash");
+//            args.add(0, "sudo");
+//        }
 
         ProcessBuilder processBuilder = new ProcessBuilder(args);
         if (printCommand) {
@@ -250,21 +290,22 @@ public class ContainerDevModeMojo extends AbstractMojo {
         LOGGER.info("Process PID: " + getPidOfProcess(process));
         if (waitFor) {
             process.waitFor();
+            LOGGER.info("Process exited with code: " + process.exitValue());
         } else {
             System.exit(-1);
         }
-        LOGGER.info("Process exited with code: " + process.exitValue());
-
+        LOGGER.info("------------------------->");
     }
 
     private void exec(String clazz) throws MojoExecutionException {
         try {
             List<String> args = new ArrayList<>();
+            args.add(getJavaHomeExecutable());
             args.add("-classpath");
             args.add(getCompilePlusRuntimeClasspathJars());
             args.add(clazz);
 
-            exec(FileUtils.getCurrentPath().toString(), args, false, true, false);
+            exec(FileUtils.getCurrentPath().toString(), args, false, true, true);
         } catch (IOException | InterruptedException e) {
             throw new MojoExecutionException("Error starting Java process!", e);
         }
