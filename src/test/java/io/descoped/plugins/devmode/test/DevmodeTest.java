@@ -26,7 +26,7 @@ public class DevmodeTest extends AbstractMojoTestCase {
         super.setUp();
     }
 
-    public void _testMojoGoal() throws Exception {
+    public void testMojoGoal() throws Exception {
         File testPom = new File(getBasedir(), "src/test/resources/test-pom.xml");
         ContainerDevModeMojo mojo = (ContainerDevModeMojo) lookupMojo("run", testPom);
         Map map = new HashMap();
@@ -48,7 +48,7 @@ public class DevmodeTest extends AbstractMojoTestCase {
         LOGGER.info("project.build.sourceDirectory: " + System.getProperty("project.build.sourceDirectory"));
     }
 
-    public void testDcevm() throws Exception {
+    public void _testDcevm() throws Exception {
         LOGGER.info("isMojoRunningInTestingHarness: " + CommonUtil.isMojoRunningInTestingHarness());
 
         HotswapInstaller installer = new HotswapInstaller();
@@ -67,7 +67,8 @@ public class DevmodeTest extends AbstractMojoTestCase {
             LOGGER.info("Dvevm Release URL: " + url);
         });
     }
-    public void testHotswap() throws Exception {
+
+    public void _testHotswap() throws Exception {
         HotswapInstaller installer = new HotswapInstaller();
         installer.findHotswapUrls();
         GitHubUrl latestVersion = installer.getHotswapLatestReleaseVersion();

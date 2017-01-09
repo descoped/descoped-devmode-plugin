@@ -8,9 +8,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
-import org.apache.maven.repository.RepositorySystem;
-import org.eclipse.aether.RepositorySystemSession;
-import org.eclipse.aether.repository.RemoteRepository;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,30 +33,20 @@ public class ContainerDevModeMojo extends AbstractMojo {
     /**
      * Output directory location
      */
-    @Parameter( property = "outputDirectory", required = true)
+    @Parameter( property = "outputDirectory", defaultValue = "target/devmode")
     private File outputDirectory;
 
     /**
      * Web content location in src
      */
-    @Parameter( property = "webContent")
+    @Parameter( property = "webContent", defaultValue = "src/main/resources/")
     private String webContent;
 
     /**
      * Main-class to execute
      */
-    @Parameter( property = "mainClass", defaultValue = "io.descoped.container.Main")
+    @Parameter( property = "mainClass", defaultValue = "io.descoped.rest.Main")
     private String mainClass;
-
-    @Component
-    private RepositorySystem repoSystem;
-
-    @Parameter( defaultValue = "${repositorySystemSession}", readonly = true, required = true )
-    private RepositorySystemSession repoSession;
-
-    @Parameter( defaultValue = "${project.remoteProjectRepositories}", readonly = true, required = true )
-    private List<RemoteRepository> repositories;
-
 
     /**
      * The maven project instance
@@ -72,6 +59,30 @@ public class ContainerDevModeMojo extends AbstractMojo {
         LOGGER = Logger.LOG;
         CommonUtil.printEnvVars();
     }
+    
+    private String getCompilePlusRuntimeClasspathJars() throws MojoExecutionException {
+        try {
+            StringBuffer buf = new StringBuffer();
+
+            String currentPath = FileUtils.getCurrentPath().toString();
+            buf.append(currentPath).append("/").append(webContent).append(":");
+            buf.append(currentPath).append("/").append("target/classes").append(":");
+            buf.append(currentPath).append("/").append("target/test-classes").append(":");
+
+            List<String> classpathElements = project.getCompileClasspathElements();
+            for(String e : classpathElements) {
+                if (e.endsWith(".jar")) {
+                    buf.append(e);
+                    if (classpathElements.indexOf(e) < classpathElements.size()-1) {
+                        buf.append(":");
+                    }
+                }
+            }
+            return buf.toString();
+        } catch (DependencyResolutionRequiredException e) {
+            throw new MojoExecutionException("Error resolving classpath deps", e);
+        }
+    }
 
     public void execute() throws MojoExecutionException {
         checkLogger();
@@ -80,11 +91,22 @@ public class ContainerDevModeMojo extends AbstractMojo {
             LOGGER.info("getBasedir: " + project.getBasedir());
             LOGGER.info("getCompileClasspathElements: " + CommonUtil.printList(project.getCompileClasspathElements()));
             LOGGER.info("getDependencies: " + CommonUtil.printList(project.getDependencies()));
-//            LOGGER.info("classpath: " + classpath);
 
         } catch (DependencyResolutionRequiredException e) {
             throw new MojoExecutionException("", e);
         }
+
+        /*
+            Build Classpath:
+            1) src/main/resources/
+            2) target/classes + test-classes
+            3) hotswap-jar
+            4) jar-files (compile classes with match for .jar)
+
+            Jvm home: make a find . > jdk-file-snapshot.txt (before and after installation to see what has been changed)
+            Java exec: install Dcevm and check that it is installed
+            Java exec: add hotswap args before start
+         */
 
         /*
         Scanner scanner = new Scanner(System.in);
@@ -95,6 +117,7 @@ public class ContainerDevModeMojo extends AbstractMojo {
 
         LOGGER.info("outputDirectory: " + outputDirectory);
         LOGGER.info("webContent: " + webContent);
+        LOGGER.info("classpath: " + getCompilePlusRuntimeClasspathJars());
         LOGGER.info("mainClass: " + mainClass);
 
         Map<Object, Object> map = getPluginContext();
@@ -107,25 +130,27 @@ public class ContainerDevModeMojo extends AbstractMojo {
         validateOutputDirectory();
 
 //        exec(resolveClass(mainClass));
+        exec(null);
     }
 
     private void exec(Class<?> mainClass) throws MojoExecutionException {
         try {
-            LOGGER.info(mainClass.getCanonicalName());
+//            LOGGER.info(mainClass.getCanonicalName());
             String separator = System.getProperty("file.separator");
             String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
-            String classpath = System.getProperty("java.class.path");
+//            String classpath = System.getProperty("java.class.path");
+            String classpath = getCompilePlusRuntimeClasspathJars();
             LOGGER.info(String.format("separator: %s -- classpath: %s -- path: %s", separator, classpath, path));
 
-            ProcessBuilder processBuilder = new ProcessBuilder(path, "-classpath", classpath, mainClass.getCanonicalName());
-            if (false) {
+            ProcessBuilder processBuilder = new ProcessBuilder(path, "-classpath", classpath, "io.descoped.rest.Main");
+            if (true) {
                 StringBuffer cmd = new StringBuffer();
                 for (String i : processBuilder.command()) {
                     cmd.append(i + " ");
                 }
                 LOGGER.info("Command:\n" + cmd);
             }
-            processBuilder.directory(outputDirectory);
+            processBuilder.directory(FileUtils.getCurrentPath().toFile());
             processBuilder.redirectInput(ProcessBuilder.Redirect.INHERIT);
             processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
             processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
@@ -143,7 +168,7 @@ public class ContainerDevModeMojo extends AbstractMojo {
             Class<?> clazz = Class.forName(className);
             return clazz;
         } catch (ClassNotFoundException e) {
-            throw new MojoExecutionException("Error locating class: " + className, e);
+            throw new MojoExecutionException("Error locating class: " + className + "\nClass-path: " + System.getProperty("java.class.path"), e);
         }
     }
 
