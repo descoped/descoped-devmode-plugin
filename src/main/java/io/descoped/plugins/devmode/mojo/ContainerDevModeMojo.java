@@ -225,7 +225,6 @@ public class ContainerDevModeMojo extends AbstractMojo {
             LOGGER.info("Install Dcevm: " + installationFile);
 
             StringBuffer bash = batchFileBufferDcevm(installationFile);
-
             File bashFile = new File(FileUtils.getCurrentPath().toString() + "/target/installDcev.sh");
             FileUtils.writeContent(bashFile, bash.toString());
             FileUtils.chmodOwnerExec(bashFile);
@@ -317,6 +316,10 @@ public class ContainerDevModeMojo extends AbstractMojo {
 
             // only for mojo testing
             if (CommonUtil.isMojoRunningInTestingHarness() || CommonUtil.isMojoRunningStandalone(project)) {
+                if (classpathElements == null) {
+                    classpathElements = new ArrayList<>();
+                    classpathElements.add(0, FileUtils.getCurrentPath().toString() + "/target/classes");
+                }
                 classpathElements.add(0, FileUtils.getCurrentPath().toString() + "/target/test-classes");
             }
 
