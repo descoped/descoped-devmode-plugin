@@ -45,7 +45,7 @@ public class ContainerDevModeMojo extends AbstractMojo {
     /**
      * Main-class to execute
      */
-    @Parameter( property = "mainClass", defaultValue = "io.descoped.rest.Main")
+    @Parameter( property = "mainClass", defaultValue = "io.descoped.container.Main")
     private String mainClass;
 
     /**
@@ -67,9 +67,9 @@ public class ContainerDevModeMojo extends AbstractMojo {
             String currentPath = FileUtils.getCurrentPath().toString();
             buf.append(currentPath).append("/").append(webContent).append(":");
             buf.append(currentPath).append("/").append("target/classes").append(":");
-            buf.append(currentPath).append("/").append("target/test-classes").append(":");
+//            buf.append(currentPath).append("/").append("target/test-classes").append(":");
 
-            List<String> classpathElements = project.getCompileClasspathElements();
+            List<String> classpathElements = project.getRuntimeClasspathElements();
             for(String e : classpathElements) {
                 if (e.endsWith(".jar")) {
                     buf.append(e);
@@ -133,7 +133,7 @@ public class ContainerDevModeMojo extends AbstractMojo {
         exec(null);
     }
 
-    private void exec(Class<?> mainClass) throws MojoExecutionException {
+    private void exec(Class<?> mainClazz) throws MojoExecutionException {
         try {
 //            LOGGER.info(mainClass.getCanonicalName());
             String separator = System.getProperty("file.separator");
@@ -142,7 +142,7 @@ public class ContainerDevModeMojo extends AbstractMojo {
             String classpath = getCompilePlusRuntimeClasspathJars();
             LOGGER.info(String.format("separator: %s -- classpath: %s -- path: %s", separator, classpath, path));
 
-            ProcessBuilder processBuilder = new ProcessBuilder(path, "-classpath", classpath, "io.descoped.rest.Main");
+            ProcessBuilder processBuilder = new ProcessBuilder(path, "-classpath", classpath, mainClass);
             if (true) {
                 StringBuffer cmd = new StringBuffer();
                 for (String i : processBuilder.command()) {
