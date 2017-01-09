@@ -128,8 +128,4 @@ public class GitHubReleases {
         return gitHubReleaseUrlList;
     }
 
-    // do a latest version check -DcheckLatestVersion
-    public boolean isHotswapperInstalled() {
-        return false;
-    }
 }

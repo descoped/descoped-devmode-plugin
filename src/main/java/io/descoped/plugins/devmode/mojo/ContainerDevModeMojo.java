@@ -169,6 +169,12 @@ public class ContainerDevModeMojo extends AbstractMojo {
 
     private String validateDecevmInstallation() throws MojoExecutionException {
         if (!CommonUtil.isMojoRunningInTestingHarness()) {
+            HotswapInstaller installer = new HotswapInstaller();
+            if (installer.isHotswapInstalled() && !System.getProperties().containsKey("dcevm.forceUpdate")) {
+                LOGGER.info("Hotwap Installed: " + installer.isHotswapInstalled());
+                return null;
+            }
+
             GitHubUrl dcevmOption = selectDcevmOptions();
             LOGGER.info("Downloading " + dcevmOption.getUrl());
 
@@ -219,9 +225,9 @@ public class ContainerDevModeMojo extends AbstractMojo {
     private void installDcevm(String installationFile) throws MojoExecutionException {
         try {
             List<String> args = new ArrayList<>();
-            args.add(getJavaHomeExecutable());
-            args.add("-jar");
-            args.add(installationFile);
+            args.add("/bin/sh");
+            args.add("-i");
+            args.add("./target/installDcev.sh");
             LOGGER.info("Install Dcevm: " + installationFile);
 
             StringBuffer bash = batchFileBufferDcevm(installationFile);
@@ -231,7 +237,7 @@ public class ContainerDevModeMojo extends AbstractMojo {
 
             LOGGER.info("\n" + bash.toString());
 
-            exec(FileUtils.getCurrentPath().toString(), args, false, false, true);
+            exec(FileUtils.getCurrentPath().toString(), args, false, true, true);
             LOGGER.info("Installation is completed!");
         } catch (IOException | InterruptedException e) {
             throw new MojoExecutionException("Error installing Dcevm!", e);

@@ -1,13 +1,18 @@
 package io.descoped.plugins.devmode.mojo;
 
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugin.logging.SystemStreamLog;
 
+import java.io.File;
 import java.util.List;
 
 /**
  * Created by oranheim on 08/01/2017.
  */
 public class HotswapInstaller {
+
+    private static final Log LOGGER = new SystemStreamLog();
 
     private GitHubUrl dcevmLatestReleaseVersion;
     private List<GitHubUrl> dcevmReleaseList;
@@ -54,4 +59,12 @@ public class HotswapInstaller {
         hotswapLatestReleaseVersion = gitHubReleases.getLatestVersionUrl();
         hotswapReleaseList = gitHubReleases.getReleaseUrlList();
     }
+
+    // do a latest version check -DcheckLatestVersion
+    public boolean isHotswapInstalled() {
+        String javaHome = System.getProperty("java.home") + "/lib/dcevm/libjvm.dylib";
+        File file = new File(javaHome);
+        return file.exists();
+    }
+
 }

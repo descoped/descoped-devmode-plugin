@@ -26,7 +26,7 @@ public class DevmodeTest extends AbstractMojoTestCase {
         super.setUp();
     }
 
-    public void testMojoGoal() throws Exception {
+    public void _testMojoGoal() throws Exception {
         File testPom = new File(getBasedir(), "src/test/resources/test-pom.xml");
         ContainerDevModeMojo mojo = (ContainerDevModeMojo) lookupMojo("run", testPom);
         Map map = new HashMap();
@@ -46,6 +46,12 @@ public class DevmodeTest extends AbstractMojoTestCase {
                 " isJdk8: " + JavaVersion.isJdk8());
 
         LOGGER.info("project.build.sourceDirectory: " + System.getProperty("project.build.sourceDirectory"));
+    }
+
+    public void testJavaHomeDcevm() throws Exception {
+        HotswapInstaller installer = new HotswapInstaller();
+        boolean exists = installer.isHotswapInstalled();
+        LOGGER.info("-----> exists: " + exists);
     }
 
     public void _testDcevm() throws Exception {
