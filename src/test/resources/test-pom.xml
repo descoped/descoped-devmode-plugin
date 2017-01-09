@@ -24,6 +24,14 @@
                 <groupId>io.descoped.mojo</groupId>
                 <artifactId>web-devmode-plugin</artifactId>
                 <version>1.0.0-SNAPSHOT</version>
+                <executions>
+                    <execution>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
                 <configuration>
                     <outputDirectory>target/test-harness/project-to-test</outputDirectory>
                     <webContent>src/main/resources/webapp</webContent>

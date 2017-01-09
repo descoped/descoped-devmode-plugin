@@ -2,6 +2,7 @@ package io.descoped.plugins.devmode.util;
 
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
+import org.apache.maven.project.MavenProject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -129,6 +130,12 @@ public class CommonUtil {
         } catch (ClassNotFoundException e) {
             return false;
         }
+    }
+
+    public static boolean isMojoRunningStandalone(MavenProject project) {
+        boolean ok = Boolean.valueOf(project.getProperties().getProperty("test.mojo"));
+        LOGGER.info("-------------> test.mojo: " + ok);
+        return ok;
     }
 
     public static String printList(List<?> list) {

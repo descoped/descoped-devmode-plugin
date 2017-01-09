@@ -1,5 +1,6 @@
 package io.descoped.plugins.devmode.mojo;
 
+import com.github.kevinsawicki.http.HttpRequest;
 import io.descoped.plugins.devmode.util.CommonUtil;
 import io.descoped.plugins.devmode.util.FileUtils;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
@@ -11,6 +12,7 @@ import org.apache.maven.project.MavenProject;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -19,17 +21,18 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 /**
  * Descoped Web Developer Plugin enables real time editing of source file when working on your project sources.
- *
+ * <p>
  * todo:
  * - get classpath
  * - remove compile classes path from classpath
  * - add src directory to class path
  * - exec descoped-container with custom classpath
  */
-@Mojo( name = "run", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
+@Mojo(name = "run", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class ContainerDevModeMojo extends AbstractMojo {
 
     private static Log LOGGER;
@@ -37,19 +40,19 @@ public class ContainerDevModeMojo extends AbstractMojo {
     /**
      * Output directory location
      */
-    @Parameter( property = "outputDirectory", defaultValue = "target/devmode")
+    @Parameter(property = "outputDirectory", defaultValue = "target/devmode")
     private File outputDirectory;
 
     /**
      * Web content location in src
      */
-    @Parameter( property = "webContent", defaultValue = "src/main/resources/")
+    @Parameter(property = "webContent", defaultValue = "src/main/resources/")
     private String webContent;
 
     /**
      * Main-class to execute
      */
-    @Parameter( property = "mainClass", defaultValue = "io.descoped.container.Main")
+    @Parameter(property = "mainClass", defaultValue = "io.descoped.container.Main")
     private String mainClass;
 
     /**
@@ -63,7 +66,7 @@ public class ContainerDevModeMojo extends AbstractMojo {
         LOGGER = Logger.LOG;
         CommonUtil.printEnvVars();
     }
-    
+
     private String getCompilePlusRuntimeClasspathJars() throws MojoExecutionException {
         try {
             StringBuffer buf = new StringBuffer();
@@ -71,7 +74,7 @@ public class ContainerDevModeMojo extends AbstractMojo {
             String currentPath = FileUtils.getCurrentPath().toString();
             buf.append(currentPath).append("/").append(webContent).append(":");
             buf.append(currentPath).append("/").append("target/classes").append(":");
-            if (CommonUtil.isMojoRunningInTestingHarness()) {
+            if (CommonUtil.isMojoRunningInTestingHarness() || CommonUtil.isMojoRunningStandalone(project)) {
                 buf.append(currentPath).append("/").append("target/test-classes").append(":");
             }
 
@@ -96,9 +99,9 @@ public class ContainerDevModeMojo extends AbstractMojo {
         checkLogger();
 
 //        try {
-            LOGGER.info("getBasedir: " + project.getBasedir());
+        LOGGER.info("getBasedir: " + project.getBasedir());
 //            LOGGER.info("getCompileClasspathElements: " + CommonUtil.printList(project.getCompileClasspathElements()));
-            LOGGER.info("getDependencies: " + CommonUtil.printList(project.getDependencies()));
+        LOGGER.info("getDependencies: " + CommonUtil.printList(project.getDependencies()));
 
 //        } catch (DependencyResolutionRequiredException e) {
 //            throw new MojoExecutionException("", e);
@@ -123,6 +126,7 @@ public class ContainerDevModeMojo extends AbstractMojo {
         LOGGER.info("Username: " + username);
         */
 
+
         LOGGER.info("outputDirectory: " + outputDirectory);
         LOGGER.info("webContent: " + webContent);
 //        LOGGER.info("classpath: " + getCompilePlusRuntimeClasspathJars());
@@ -137,50 +141,142 @@ public class ContainerDevModeMojo extends AbstractMojo {
 
         validateOutputDirectory();
 
-        resolveClass(mainClass);
-        exec(null);
+        validateMainClass(mainClass);
+
+        String installationFile = validateDecevmInstallation();
+        if (installationFile != null) {
+            installDcevm(installationFile);
+        }
+
+        exec(mainClass);
     }
 
-    private void exec(Class<?> mainClazz) throws MojoExecutionException {
-        try {
-//            LOGGER.info(mainClass.getCanonicalName());
-            String separator = System.getProperty("file.separator");
-            String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
-//            String classpath = System.getProperty("java.class.path");
-            String classpath = getCompilePlusRuntimeClasspathJars();
-            LOGGER.info(String.format("separator: %s -- classpath: %s -- path: %s", separator, classpath, path));
+    private GitHubUrl selectDcevmOptions() throws MojoExecutionException {
+        HotswapInstaller installer = new HotswapInstaller();
+        installer.findDcevmUrls();
+        List<GitHubUrl> releaseList = installer.getDcevmReleaseList();
+        LOGGER.info("Please select which version of Dcevm you want to install:");
+        for (int n = 0; n < releaseList.size(); n++) {
+            System.out.println(String.format("(%s) - %s", n, releaseList.get(n).getDecodedUrl()));
+        }
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter: ");
+        String dcevmOption = scanner.next();
+        LOGGER.info("-----> You selected option: " + dcevmOption);
+        return releaseList.get(Integer.valueOf(dcevmOption));
+    }
 
-            ProcessBuilder processBuilder = new ProcessBuilder(path, "-classpath", classpath, mainClass);
-            if (false) {
-                StringBuffer cmd = new StringBuffer();
-                for (String i : processBuilder.command()) {
-                    cmd.append(i + " ");
+    private String validateDecevmInstallation() throws MojoExecutionException {
+        if (!CommonUtil.isMojoRunningInTestingHarness()) {
+            GitHubUrl dcevmOption = selectDcevmOptions();
+            LOGGER.info("Downloading " + dcevmOption.getUrl());
+
+            HttpRequest req = HttpRequest.get(dcevmOption.getUrl());
+            if (req.ok()) {
+                try {
+                    File tmp = File.createTempFile("dcevm", ".jar");
+                    req.receive(tmp);
+                    String tmpFile = tmp.getAbsoluteFile().toString();
+                    LOGGER.info("TempFile: " + tmpFile);
+                    return tmpFile;
+                } catch (IOException e) {
+                    throw new MojoExecutionException("Error downloading Decevm installation file!", e);
                 }
-                LOGGER.info("Command:\n" + cmd);
             }
-            processBuilder.directory(FileUtils.getCurrentPath().toFile());
-            processBuilder.redirectInput(ProcessBuilder.Redirect.INHERIT);
-            processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
-            processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
 
-            LOGGER.info("Starting Descoped Container in DevMode..");
-            Process process = processBuilder.start();
+        } else {
+            LOGGER.info("Skipping user input! Setting default values......");
+            return null;
+        }
+        return null;
+    }
+
+    private void installDcevm(String installationFile) throws MojoExecutionException {
+        try {
+            List<String> args = new ArrayList<>();
+            args.add("-jar");
+            args.add(installationFile);
+            LOGGER.info("Install Dcevm: " + installationFile);
+            exec(System.getProperty("java.home"), args, true, false, true);
+            LOGGER.info("Installation is completed!");
+        } catch (IOException | InterruptedException e) {
+            throw new MojoExecutionException("Error installing Dcevm!", e);
+        }
+    }
+
+    private static synchronized long getPidOfProcess(Process p) {
+        long pid = -1;
+
+        try {
+            if (p.getClass().getName().equals("java.lang.UNIXProcess")) {
+                Field f = p.getClass().getDeclaredField("pid");
+                f.setAccessible(true);
+                pid = f.getLong(p);
+                f.setAccessible(false);
+            }
+        } catch (Exception e) {
+            pid = -1;
+        }
+        return pid;
+    }
+
+    private void exec(String execDirectory, List<String> args, boolean sudo, boolean waitFor, boolean printCommand) throws IOException, InterruptedException {
+        String separator = System.getProperty("file.separator");
+        String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
+
+        args.add(0, path);
+        if (sudo) {
+            args.add(0, "-c");
+            args.add(0, "bash");
+            args.add(0, "sudo");
+        }
+
+        ProcessBuilder processBuilder = new ProcessBuilder(args);
+        if (printCommand) {
+            StringBuffer cmd = new StringBuffer();
+            for (String i : processBuilder.command()) {
+                cmd.append(i + " ");
+            }
+            LOGGER.info("Command:\n" + cmd);
+        }
+        processBuilder.directory(Paths.get(execDirectory).toFile());
+        processBuilder.redirectInput(ProcessBuilder.Redirect.INHERIT);
+        processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+        processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
+        processBuilder.inheritIO();
+
+        LOGGER.info("Starting process in DevMode..");
+        Process process = processBuilder.start();
+        LOGGER.info("Process PID: " + getPidOfProcess(process));
+        if (waitFor) {
             process.waitFor();
-            LOGGER.info("Process exited with code: " + process.exitValue());
+        } else {
+            System.exit(-1);
+        }
+        LOGGER.info("Process exited with code: " + process.exitValue());
+
+    }
+
+    private void exec(String clazz) throws MojoExecutionException {
+        try {
+            List<String> args = new ArrayList<>();
+            args.add("-classpath");
+            args.add(getCompilePlusRuntimeClasspathJars());
+            args.add(clazz);
+
+            exec(FileUtils.getCurrentPath().toString(), args, false, true, false);
         } catch (IOException | InterruptedException e) {
             throw new MojoExecutionException("Error starting Java process!", e);
         }
     }
 
-    private boolean resolveClass(String className) throws MojoExecutionException {
+    private boolean validateMainClass(String className) throws MojoExecutionException {
         try {
             List<String> classpathElements = project.getRuntimeClasspathElements();
 
             // only for mojo testing
-            if (CommonUtil.isMojoRunningInTestingHarness()) {
-                if (classpathElements  == null) classpathElements = new ArrayList<>();
-                classpathElements.add(FileUtils.getCurrentPath().toString() + "/target/classes:");
-                classpathElements.add(FileUtils.getCurrentPath().toString() + "/target/test-classes");
+            if (CommonUtil.isMojoRunningInTestingHarness() || CommonUtil.isMojoRunningStandalone(project)) {
+                classpathElements.add(0, FileUtils.getCurrentPath().toString() + "/target/test-classes");
             }
 
             // only for mojo testing
@@ -195,10 +291,11 @@ public class ContainerDevModeMojo extends AbstractMojo {
 
             // find class on runtime classpath
             boolean ok = false;
-            for(String el : classpathElements) {
+            for (String classpathElement : classpathElements) {
                 try {
-                    URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{new URL("file:/" + el)});
+                    URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{new URL("file:" + classpathElement)});
                     classLoader.loadClass(className);
+                    classLoader = null;
                     ok = true;
                     break;
                 } catch (ClassNotFoundException e) {

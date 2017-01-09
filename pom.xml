@@ -109,19 +109,52 @@
         </dependency>
 
         <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.maven.plugin-testing</groupId>
             <artifactId>maven-plugin-testing-harness</artifactId>
             <version>${maven.plugin.testing.harness}</version>
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
+
+    <profiles>
+        <!-- mvn clean test-compile -Pmojo -->
+        <profile>
+            <id>mojo</id>
+            <properties>
+                <test.mojo>true</test.mojo>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>io.descoped.mojo</groupId>
+                        <artifactId>web-devmode-plugin</artifactId>
+                        <version>${project.version}</version>
+                        <executions>
+                            <execution>
+                                <phase>test-compile</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <outputDirectory>target/devmode</outputDirectory>
+                            <webContent>src/main/resources</webContent>
+                            <mainClass>io.descoped.plugins.devmode.test.Echo</mainClass>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <build>
         <plugins>
