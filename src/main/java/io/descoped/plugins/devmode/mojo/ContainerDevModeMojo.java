@@ -11,8 +11,12 @@ import org.apache.maven.project.MavenProject;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -67,14 +71,18 @@ public class ContainerDevModeMojo extends AbstractMojo {
             String currentPath = FileUtils.getCurrentPath().toString();
             buf.append(currentPath).append("/").append(webContent).append(":");
             buf.append(currentPath).append("/").append("target/classes").append(":");
-//            buf.append(currentPath).append("/").append("target/test-classes").append(":");
+            if (CommonUtil.isMojoRunningInTestingHarness()) {
+                buf.append(currentPath).append("/").append("target/test-classes").append(":");
+            }
 
             List<String> classpathElements = project.getRuntimeClasspathElements();
-            for(String e : classpathElements) {
-                if (e.endsWith(".jar")) {
-                    buf.append(e);
-                    if (classpathElements.indexOf(e) < classpathElements.size()-1) {
-                        buf.append(":");
+            if (classpathElements != null) {
+                for (String e : classpathElements) {
+                    if (e.endsWith(".jar")) {
+                        buf.append(e);
+                        if (classpathElements.indexOf(e) < classpathElements.size() - 1) {
+                            buf.append(":");
+                        }
                     }
                 }
             }
@@ -87,14 +95,14 @@ public class ContainerDevModeMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException {
         checkLogger();
 
-        try {
+//        try {
             LOGGER.info("getBasedir: " + project.getBasedir());
-            LOGGER.info("getCompileClasspathElements: " + CommonUtil.printList(project.getCompileClasspathElements()));
+//            LOGGER.info("getCompileClasspathElements: " + CommonUtil.printList(project.getCompileClasspathElements()));
             LOGGER.info("getDependencies: " + CommonUtil.printList(project.getDependencies()));
 
-        } catch (DependencyResolutionRequiredException e) {
-            throw new MojoExecutionException("", e);
-        }
+//        } catch (DependencyResolutionRequiredException e) {
+//            throw new MojoExecutionException("", e);
+//        }
 
         /*
             Build Classpath:
@@ -117,7 +125,7 @@ public class ContainerDevModeMojo extends AbstractMojo {
 
         LOGGER.info("outputDirectory: " + outputDirectory);
         LOGGER.info("webContent: " + webContent);
-        LOGGER.info("classpath: " + getCompilePlusRuntimeClasspathJars());
+//        LOGGER.info("classpath: " + getCompilePlusRuntimeClasspathJars());
         LOGGER.info("mainClass: " + mainClass);
 
         Map<Object, Object> map = getPluginContext();
@@ -129,7 +137,7 @@ public class ContainerDevModeMojo extends AbstractMojo {
 
         validateOutputDirectory();
 
-//        exec(resolveClass(mainClass));
+        resolveClass(mainClass);
         exec(null);
     }
 
@@ -143,7 +151,7 @@ public class ContainerDevModeMojo extends AbstractMojo {
             LOGGER.info(String.format("separator: %s -- classpath: %s -- path: %s", separator, classpath, path));
 
             ProcessBuilder processBuilder = new ProcessBuilder(path, "-classpath", classpath, mainClass);
-            if (true) {
+            if (false) {
                 StringBuffer cmd = new StringBuffer();
                 for (String i : processBuilder.command()) {
                     cmd.append(i + " ");
@@ -155,6 +163,7 @@ public class ContainerDevModeMojo extends AbstractMojo {
             processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
             processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
 
+            LOGGER.info("Starting Descoped Container in DevMode..");
             Process process = processBuilder.start();
             process.waitFor();
             LOGGER.info("Process exited with code: " + process.exitValue());
@@ -163,11 +172,42 @@ public class ContainerDevModeMojo extends AbstractMojo {
         }
     }
 
-    private Class<?> resolveClass(String className) throws MojoExecutionException {
+    private boolean resolveClass(String className) throws MojoExecutionException {
         try {
-            Class<?> clazz = Class.forName(className);
-            return clazz;
-        } catch (ClassNotFoundException e) {
+            List<String> classpathElements = project.getRuntimeClasspathElements();
+
+            // only for mojo testing
+            if (CommonUtil.isMojoRunningInTestingHarness()) {
+                if (classpathElements  == null) classpathElements = new ArrayList<>();
+                classpathElements.add(FileUtils.getCurrentPath().toString() + "/target/classes:");
+                classpathElements.add(FileUtils.getCurrentPath().toString() + "/target/test-classes");
+            }
+
+            // only for mojo testing
+            if (classpathElements == null || classpathElements.isEmpty()) {
+                try {
+                    Class.forName(className);
+                    return true;
+                } catch (ClassNotFoundException e) {
+                    return false;
+                }
+            }
+
+            // find class on runtime classpath
+            boolean ok = false;
+            for(String el : classpathElements) {
+                try {
+                    URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{new URL("file:/" + el)});
+                    classLoader.loadClass(className);
+                    ok = true;
+                    break;
+                } catch (ClassNotFoundException e) {
+                }
+            }
+            return ok;
+        } catch (DependencyResolutionRequiredException e) {
+            throw new MojoExecutionException("Error locating class: " + className + "\nClass-path: " + System.getProperty("java.class.path"), e);
+        } catch (MalformedURLException e) {
             throw new MojoExecutionException("Error locating class: " + className + "\nClass-path: " + System.getProperty("java.class.path"), e);
         }
     }
