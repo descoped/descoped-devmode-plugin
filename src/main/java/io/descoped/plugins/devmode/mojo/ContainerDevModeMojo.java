@@ -11,6 +11,7 @@ import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
@@ -60,6 +61,22 @@ public class ContainerDevModeMojo extends AbstractMojo {
      */
     @Component
     private MavenProject project;
+
+    private static synchronized long getPidOfProcess(Process p) {
+        long pid = -1;
+
+        try {
+            if (p.getClass().getName().equals("java.lang.UNIXProcess")) {
+                Field f = p.getClass().getDeclaredField("pid");
+                f.setAccessible(true);
+                pid = f.getLong(p);
+                f.setAccessible(false);
+            }
+        } catch (Exception e) {
+            pid = -1;
+        }
+        return pid;
+    }
 
     private void checkLogger() {
         Logger.setLOG(getLog());
@@ -244,22 +261,6 @@ public class ContainerDevModeMojo extends AbstractMojo {
         }
     }
 
-    private static synchronized long getPidOfProcess(Process p) {
-        long pid = -1;
-
-        try {
-            if (p.getClass().getName().equals("java.lang.UNIXProcess")) {
-                Field f = p.getClass().getDeclaredField("pid");
-                f.setAccessible(true);
-                pid = f.getLong(p);
-                f.setAccessible(false);
-            }
-        } catch (Exception e) {
-            pid = -1;
-        }
-        return pid;
-    }
-
     private String getJavaHomeExecutable() {
         String separator = System.getProperty("file.separator");
         String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
@@ -306,6 +307,31 @@ public class ContainerDevModeMojo extends AbstractMojo {
         try {
             List<String> args = new ArrayList<>();
             args.add(getJavaHomeExecutable());
+            {
+                HotswapInstaller installer = new HotswapInstaller();
+                installer.findHotswapUrls();
+                List<GitHubUrl> releaseUrlList = installer.getHotswapReleaseList();
+                GitHubUrl latestVersion = releaseUrlList.get(0);
+                String url = latestVersion.getDecodedUrl();
+                Path path = Paths.get(url);
+                LOGGER.info("=========> releaseHotswapUrls: " + path.getFileName());
+
+                Path writePath = Paths.get("/tmp/descoped");
+                FileUtils.createDirectories(writePath);
+
+                HttpRequest req = HttpRequest.get(latestVersion.getUrl());
+                if (req.ok()) {
+                    File jarFileHandle = writePath.resolve(path.getFileName()).toFile();
+                    FileOutputStream jarFile = new FileOutputStream(jarFileHandle);
+                    req.receive(jarFile);
+                    LOGGER.info("Received file: " + jarFileHandle.getAbsoluteFile().toString());
+                    // add file
+                    args.add("-XXaltjvm=dcevm");
+                    args.add("-javaagent:" + jarFileHandle.getAbsoluteFile().toString());
+                }
+
+            }
+
             args.add("-classpath");
             args.add(getCompilePlusRuntimeClasspathJars());
             args.add(clazz);
