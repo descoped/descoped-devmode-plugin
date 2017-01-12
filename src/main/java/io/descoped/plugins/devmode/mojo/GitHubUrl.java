@@ -11,10 +11,6 @@ public class GitHubUrl {
     private  final String tag;
     private final String url;
 
-    public GitHubUrl(String url) {
-        this(null, url);
-    }
-
     public GitHubUrl(String tag, String url) {
         this.tag = tag;
         this.url = url;

@@ -51,8 +51,11 @@ public class GitHubReleasesTest {
     public void testDcevmReleases() throws Exception {
         GitHubReleases installer = new GitHubReleases();
         List<GitHubUrl> urls = installer.getDcevmReleaseList();
+        GitHubUrl matchUrl = installer.findMatchingDcevmVersion(urls);
         urls.forEach(url -> {
-            LOGGER.info("DcevmReleases\t\t..tagName: " + url.getTag() + " \tbrowser_download_url: " + url.getUrl());
+            boolean match = (url.equalTo(matchUrl));
+            String tail = String.format(" %s", (match ? "(m)" : ""));
+            LOGGER.info("DcevmReleases\t\t..tagName: " + url.getTag() + " \tbrowser_download_url: " + url.getUrl() + tail);
         });
     }
 

@@ -65,7 +65,7 @@ public class GitHubReleases {
             GitHubUrl url = getDcevmReleaseUrl(json, null, null);
             return url;
         } else {
-            throw new MojoExecutionException("Error fetching data: " + req.code());
+            throw new MojoExecutionException("Error fetching data due to http-error-code: " + req.code());
         }
     }
 
@@ -81,8 +81,21 @@ public class GitHubReleases {
                 if (url == null) continue;
                 result.add(url);
             }
+            result.sort((o1, o2) -> {
+                String tag1 = o1.getTag();
+                String tag2 = o2.getTag();
+                String major1 = tag1.substring(tag1.indexOf("jdk")+3, tag1.indexOf("u"));
+                String major2 = tag2.substring(tag2.indexOf("jdk")+3, tag2.indexOf("u"));
+                String minor1 = tag1.substring(tag1.indexOf("u")+1, tag1.indexOf("+"));
+                String minor2 = tag2.substring(tag2.indexOf("u")+1, tag2.indexOf("+"));
+                minor1 = (minor1.length() == 2 ? "0"+minor1 : minor1);
+                minor2 = (minor2.length() == 2 ? "0"+minor2 : minor2);
+                minor1 = major1 + minor1;
+                minor2 = major2 + minor2;
+                return minor2.compareTo(minor1);
+            });
         } else {
-            throw new MojoExecutionException("Error fetching data: " + req.code());
+            throw new MojoExecutionException("Error fetching data due to http-error-code: " + req.code());
         }
         return result;
     }
@@ -95,7 +108,7 @@ public class GitHubReleases {
             GitHubUrl url = getHotswapReleaseUrl(json);
             return url;
         } else {
-            throw new MojoExecutionException("Error fetching data: " + req.code());
+            throw new MojoExecutionException("Error fetching data due to http-error-code: " + req.code());
         }
     }
 
@@ -112,9 +125,19 @@ public class GitHubReleases {
                 result.add(url);
             }
         } else {
-            throw new MojoExecutionException("Error fetching data: " + req.code());
+            throw new MojoExecutionException("Error fetching data due to http-error-code: " + req.code());
         }
         return result;
     }
 
+    public GitHubUrl findMatchingDcevmVersion(List<GitHubUrl> releases) {
+        String spec = String.format("light-jdk%su%s", (JavaVersion.isJdk8() ? "8" : "7"), JavaVersion.getMinor());
+        List<GitHubUrl> options = new ArrayList<>();
+        releases.forEach(url -> {
+            if (url.getTag().startsWith(spec)) {
+                options.add(url);
+            }
+        });
+        return (options.isEmpty() ? null : options.get(0));
+    }
 }
