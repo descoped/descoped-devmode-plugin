@@ -1,19 +1,16 @@
 package io.descoped.plugins.devmode.mojo;
 
 import com.github.kevinsawicki.http.HttpRequest;
-import io.descoped.plugins.devmode.util.CommonUtil;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.StringReader;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Created by oranheim on 08/01/2017.
@@ -21,111 +18,103 @@ import java.util.regex.Pattern;
 public class GitHubReleases {
 
     private static final Log LOGGER = new SystemStreamLog();
+    private static final String DCEVM_LATEST_RELEASE = "https://api.github.com/repos/dcevm/dcevm/releases/latest";
+    private static final String DCEVM_RELEASES_ = "https://api.github.com/repos/dcevm/dcevm/releases";
+    private static final String HOTSWAP_LATEST_RELEASE = "https://api.github.com/repos/HotswapProjects/HotswapAgent/releases/latest";
+    private static final String HOTSWAP_RELEASES = "https://api.github.com/repos/HotswapProjects/HotswapAgent/releases";
 
-    private final String latestVersionUrl;
-    private final String releaseUrl;
-    private final String latestLinkMatch;
-    private final String releaseLinkMatch;
-    private final GitHubUrl gitHubLatestVersionUrl;
-    private final List<GitHubUrl> gitHubReleaseUrlList;
-
-    public GitHubReleases(String latestVersionUrl, String latestLinkMatch, String releaseUrl, String releaseLinkMatch) throws MojoExecutionException {
-        this.latestVersionUrl = latestVersionUrl;
-        this.latestLinkMatch = latestLinkMatch;
-        this.releaseUrl = releaseUrl;
-        this.releaseLinkMatch = releaseLinkMatch;
-
-        try {
-            gitHubLatestVersionUrl = downloadLatestVersionURL();
-            gitHubReleaseUrlList = downloadReleaseURLs();
-        } catch (MojoExecutionException e) {
-            e.printStackTrace();
-            throw e;
-        }
+    public GitHubReleases() throws MojoExecutionException {
     }
 
-    private List<String> grabHtmlLinks(String html, String hrefContainsToken) throws IOException {
-        List<String> links = new ArrayList<>();
+    private GitHubUrl getDcevmReleaseUrl(JSONObject json, String tagNameFilter, String urlFilter) {
+        String tagName = json.getString("tag_name");
+        if (tagNameFilter != null && tagName.contains(tagNameFilter)) return null;
+        JSONObject asset = (JSONObject) json.getJSONArray("assets").get(0);
+        String browserUrl = asset.getString("browser_download_url");
+        if (urlFilter != null && !browserUrl.contains(urlFilter)) return null;
+        return new GitHubUrl(tagName, browserUrl);
+    }
 
-        String MATCHER = "href=\"(.*?)\"";
-        Pattern p = Pattern.compile(MATCHER, Pattern.DOTALL);
-        Pattern p2 = Pattern.compile("(\\d+([.]\\d+)+)");
-
-
-        BufferedReader reader = new BufferedReader(new StringReader(html));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            Matcher m = p.matcher(line);
-            if (m.find()) {
-                if (m.groupCount() == 1) {
-                    String match = m.group(1);
-                    if (hrefContainsToken != null) {
-//                        Matcher m2 = p2.matcher(match);
-//                        if (m2.find()) {
-//                            System.out.println("-------------------> " + m2.groupCount());
-//                            for(int n = 0; n<=m2.groupCount(); n++) {
-//                                String ss = m2.group(n);
-//                                System.out.println("---------------------> " + ss);
-//                            }
-//                        }
-                        if (match.contains(hrefContainsToken)) {
-                            links.add(match);
-                        }
-                    } else {
-                        links.add(match);
-                    }
-                }
+    private GitHubUrl getHotswapReleaseUrl(JSONObject json) {
+        String tagName = json.getString("tag_name");
+        String browserUrl = null;
+        Iterator<Object> assets = json.getJSONArray("assets").iterator();
+        while (assets.hasNext()) {
+            JSONObject asset = (JSONObject) assets.next();
+            String dlurl = asset.getString("browser_download_url");
+            if (dlurl.contains("-sources")) continue;
+            if (dlurl.contains("hotswap-agent") && dlurl.contains(".jar")) {
+                browserUrl = asset.getString("browser_download_url");
             }
         }
-
-        return links;
+        return (browserUrl == null ? null : new GitHubUrl(tagName, browserUrl));
     }
 
-    private GitHubUrl downloadLatestVersionURL() throws MojoExecutionException {
-        try {
-            HttpRequest req = HttpRequest.get(latestVersionUrl).followRedirects(false);
-            OutputStream out = CommonUtil.newOutputStream();
-            req.receive(out);
-            List<String> links = grabHtmlLinks(out.toString(), null);
-            if (!links.isEmpty()) {
-                String downloadLink = links.get(0);
-                LOGGER.info("downloadLink: " + downloadLink);
-                req = HttpRequest.get(downloadLink);
-                links = grabHtmlLinks(req.body(), latestLinkMatch);
-                if (!links.isEmpty()) {
-                    return new GitHubUrl("https://github.com" + links.get(0));
-                }
-            }
-        } catch (IOException e) {
-            new MojoExecutionException("Error resolving Download URL", e);
-        }
-        throw new MojoExecutionException("Unable to resolve Download URL");
+    // do a latest version check -DcheckLatestVersion
+    public boolean isHotswapInstalled() {
+        String javaHome = System.getProperty("java.home") + "/lib/dcevm/libjvm.dylib";
+        File file = new File(javaHome);
+        return file.exists();
     }
 
-    private List<GitHubUrl> downloadReleaseURLs() throws MojoExecutionException {
-        try {
-            HttpRequest req = HttpRequest.get(releaseUrl);
+    public GitHubUrl getDcevmLatestReleaseVersion() throws MojoExecutionException {
+        HttpRequest req = HttpRequest.get(DCEVM_LATEST_RELEASE);
+        if (req.ok()) {
             String body = req.body();
-
-            List<GitHubUrl> _links = new ArrayList<>();
-            List<String> links = grabHtmlLinks(body, latestLinkMatch);
-            for (String link : links) {
-                if (link.contains(releaseLinkMatch)) continue;
-                _links.add(new GitHubUrl("https://github.com" + link));
-            }
-            return _links;
-        } catch (IOException e) {
-            new MojoExecutionException("Error resolving Download URL", e);
+            JSONObject json = new JSONObject(body);
+            GitHubUrl url = getDcevmReleaseUrl(json, null, null);
+            return url;
+        } else {
+            throw new MojoExecutionException("Error fetching data: " + req.code());
         }
-        throw new MojoExecutionException("Unable to resolve Download URL");
     }
 
-    public GitHubUrl getLatestVersionUrl() {
-        return gitHubLatestVersionUrl;
+    public List<GitHubUrl> getDcevmReleaseList() throws MojoExecutionException {
+        List<GitHubUrl> result = new ArrayList<>();
+        HttpRequest req = HttpRequest.get(DCEVM_RELEASES_);
+        if (req.ok()) {
+            String body = req.body();
+            JSONArray array = new JSONArray(body);
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject json = (JSONObject) array.get(i);
+                GitHubUrl url = getDcevmReleaseUrl(json, "full-", "-installer.jar");
+                if (url == null) continue;
+                result.add(url);
+            }
+        } else {
+            throw new MojoExecutionException("Error fetching data: " + req.code());
+        }
+        return result;
     }
 
-    public List<GitHubUrl> getReleaseUrlList() {
-        return gitHubReleaseUrlList;
+    public GitHubUrl getHotswapLatestReleaseVersion() throws MojoExecutionException {
+        HttpRequest req = HttpRequest.get(HOTSWAP_LATEST_RELEASE);
+        String body = req.body();
+        if (req.ok()) {
+            JSONObject json = new JSONObject(body);
+            GitHubUrl url = getHotswapReleaseUrl(json);
+            return url;
+        } else {
+            throw new MojoExecutionException("Error fetching data: " + req.code());
+        }
+    }
+
+    public List<GitHubUrl> getHotswapReleaseList() throws MojoExecutionException {
+        List<GitHubUrl> result = new ArrayList<>();
+        HttpRequest req = HttpRequest.get(HOTSWAP_RELEASES);
+        if (req.ok()) {
+            String body = req.body();
+            JSONArray array = new JSONArray(body);
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject json = (JSONObject) array.get(i);
+                GitHubUrl url = getHotswapReleaseUrl(json);
+                if (url == null) continue;
+                result.add(url);
+            }
+        } else {
+            throw new MojoExecutionException("Error fetching data: " + req.code());
+        }
+        return result;
     }
 
 }

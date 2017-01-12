@@ -32,7 +32,7 @@ import java.util.Scanner;
  * - exec descoped-container with custom classpath
  */
 @Mojo(name = "run", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
-public class ContainerDevModeMojo extends AbstractMojo {
+public class DevModeMojo extends AbstractMojo {
 
     private static Log LOGGER;
 
@@ -168,8 +168,8 @@ public class ContainerDevModeMojo extends AbstractMojo {
     }
 
     private GitHubUrl selectDcevmOptions() throws MojoExecutionException {
-        HotswapInstaller installer = new HotswapInstaller();
-        installer.findDcevmUrls();
+        GitHubReleases installer = new GitHubReleases();
+//        installer.findDcevmUrls();
         List<GitHubUrl> releaseList = installer.getDcevmReleaseList();
         LOGGER.info("Please select which version of Dcevm you want to install:");
         for (int n = 0; n < releaseList.size(); n++) {
@@ -184,7 +184,7 @@ public class ContainerDevModeMojo extends AbstractMojo {
 
     private String validateDecevmInstallation() throws MojoExecutionException {
         if (!CommonUtil.isMojoRunningInTestingHarness()) {
-            HotswapInstaller installer = new HotswapInstaller();
+            GitHubReleases installer = new GitHubReleases();
             if (installer.isHotswapInstalled() && !System.getProperties().containsKey("dcevm.forceUpdate")) {
                 LOGGER.info("Hotwap Installed: " + installer.isHotswapInstalled());
                 return null;
@@ -308,8 +308,8 @@ public class ContainerDevModeMojo extends AbstractMojo {
             List<String> args = new ArrayList<>();
             args.add(getJavaHomeExecutable());
             {
-                HotswapInstaller installer = new HotswapInstaller();
-                installer.findHotswapUrls();
+                GitHubReleases installer = new GitHubReleases();
+//                installer.findHotswapUrls();
                 List<GitHubUrl> releaseUrlList = installer.getHotswapReleaseList();
                 GitHubUrl latestVersion = releaseUrlList.get(0);
                 String url = latestVersion.getDecodedUrl();

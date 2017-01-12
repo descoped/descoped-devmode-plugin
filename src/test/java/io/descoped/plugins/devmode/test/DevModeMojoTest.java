@@ -1,8 +1,8 @@
 package io.descoped.plugins.devmode.test;
 
-import io.descoped.plugins.devmode.mojo.ContainerDevModeMojo;
+import io.descoped.plugins.devmode.mojo.DevModeMojo;
+import io.descoped.plugins.devmode.mojo.GitHubReleases;
 import io.descoped.plugins.devmode.mojo.GitHubUrl;
-import io.descoped.plugins.devmode.mojo.HotswapInstaller;
 import io.descoped.plugins.devmode.mojo.JavaVersion;
 import io.descoped.plugins.devmode.util.CommonUtil;
 import org.apache.maven.plugin.logging.Log;
@@ -17,7 +17,7 @@ import java.util.Map;
 /**
  * Created by oranheim on 07/01/2017.
  */
-public class DevmodeTest extends AbstractMojoTestCase {
+public class DevModeMojoTest extends AbstractMojoTestCase {
 
     private static final Log LOGGER = new SystemStreamLog();
 
@@ -28,7 +28,7 @@ public class DevmodeTest extends AbstractMojoTestCase {
 
     public void _testMojoGoal() throws Exception {
         File testPom = new File(getBasedir(), "src/test/resources/test-pom.xml");
-        ContainerDevModeMojo mojo = (ContainerDevModeMojo) lookupMojo("run", testPom);
+        DevModeMojo mojo = (DevModeMojo) lookupMojo("run", testPom);
         Map map = new HashMap();
         map.put("project", new MojoMavenProjectStub());
         mojo.setPluginContext(map);
@@ -49,7 +49,7 @@ public class DevmodeTest extends AbstractMojoTestCase {
     }
 
     public void _testJavaHomeDcevm() throws Exception {
-        HotswapInstaller installer = new HotswapInstaller();
+        GitHubReleases installer = new GitHubReleases();
         boolean exists = installer.isHotswapInstalled();
         LOGGER.info("-----> exists: " + exists);
     }
@@ -57,8 +57,8 @@ public class DevmodeTest extends AbstractMojoTestCase {
     public void testDcevm() throws Exception {
         LOGGER.info("isMojoRunningInTestingHarness: " + CommonUtil.isMojoRunningInTestingHarness());
 
-        HotswapInstaller installer = new HotswapInstaller();
-        installer.findDcevmUrls();
+        GitHubReleases installer = new GitHubReleases();
+//        installer.findDcevmUrls();
         GitHubUrl latestVersion = installer.getDcevmLatestReleaseVersion();
         List<GitHubUrl> releaseUrlList = installer.getDcevmReleaseList();
 
@@ -75,8 +75,8 @@ public class DevmodeTest extends AbstractMojoTestCase {
     }
 
     public void testHotswap() throws Exception {
-        HotswapInstaller installer = new HotswapInstaller();
-        installer.findHotswapUrls();
+        GitHubReleases installer = new GitHubReleases();
+//        installer.findHotswapUrls();
         GitHubUrl latestVersion = installer.getHotswapLatestReleaseVersion();
         List<GitHubUrl> releaseUrlList = installer.getHotswapReleaseList();
 
