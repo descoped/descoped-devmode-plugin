@@ -25,7 +25,7 @@ public class GitHubUrl {
     }
 
     public boolean equalTo(GitHubUrl gitHubUrl) {
-        return url.equals(gitHubUrl.getUrl());
+        return (gitHubUrl == null ? false : url.equals(gitHubUrl.getUrl()));
     }
 
     public String getDecodedUrl() {
