@@ -46,7 +46,6 @@ public class DcevmInstallTest {
         HttpRequest req = HttpRequest.get("https://api.github.com/repos/dcevm/dcevm/releases/latest");
         String body = req.body();
         JSONObject json = new JSONObject(body);
-//        log.info("GET dcevm/release/latest: " + json.toString(2));
         log.info("..tag_name: " + json.getString("tag_name"));
         log.info("..browser_download_url: " + ((JSONObject)json.getJSONArray("assets").get(0)).getString("browser_download_url"));
     }
@@ -71,7 +70,6 @@ public class DcevmInstallTest {
         HttpRequest req = HttpRequest.get("https://api.github.com/repos/HotswapProjects/HotswapAgent/releases/latest");
         String body = req.body();
         JSONObject json = new JSONObject(body);
-//        log.info("GET HotswapAgent/release/latest: " + json.toString(2));
         log.info("..tag_name: " + json.getString("tag_name"));
         String browserUrl = null;
         Iterator<Object> assets = json.getJSONArray("assets").iterator();
@@ -93,7 +91,6 @@ public class DcevmInstallTest {
         JSONArray array = new JSONArray(body);
         for (int i = 0; i < array.length(); i++) {
             JSONObject json = (JSONObject) array.get(i);
-//            log.info("..." + json.toString(2));
             String browserUrl = null;
             Iterator<Object> assets = json.getJSONArray("assets").iterator();
             while (assets.hasNext()) {
