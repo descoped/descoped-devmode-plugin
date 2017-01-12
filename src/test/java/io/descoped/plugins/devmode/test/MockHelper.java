@@ -2,6 +2,7 @@ package io.descoped.plugins.devmode.test;
 
 import io.descoped.plugins.devmode.mojo.GitHubReleases;
 import io.descoped.plugins.devmode.mojo.GitHubUrl;
+import io.descoped.plugins.devmode.util.CommonUtil;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 
@@ -19,7 +20,7 @@ public class MockHelper {
     private static final boolean USE_MOCK = true;
 
     public static GitHubReleases mockGitHubReleases() throws MojoExecutionException {
-        if (!USE_MOCK) return new GitHubReleases();
+        if (!CommonUtil.isTravisCI() && !USE_MOCK) return new GitHubReleases();
 
         new SystemStreamLog().info("Creation of MockGitHubReleases");
 

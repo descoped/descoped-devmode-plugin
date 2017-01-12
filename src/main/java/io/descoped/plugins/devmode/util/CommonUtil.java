@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import static java.lang.Boolean.TRUE;
+
 /**
  * Created by oranheim on 04/01/2017.
  */
@@ -138,6 +140,10 @@ public class CommonUtil {
         boolean ok = Boolean.valueOf(project.getProperties().getProperty("test.mojo"));
         LOGGER.info("-------------> test.mojo: " + ok);
         return ok;
+    }
+
+    public static boolean isTravisCI() {
+        return TRUE.equals(Boolean.valueOf(System.getenv("TRAVIS")));
     }
 
     public static String printList(List<?> list) {
