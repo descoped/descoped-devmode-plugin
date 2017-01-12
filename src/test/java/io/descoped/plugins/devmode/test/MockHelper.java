@@ -20,7 +20,7 @@ public class MockHelper {
     private static final boolean USE_MOCK = true;
 
     public static GitHubReleases mockGitHubReleases() throws MojoExecutionException {
-        if (!CommonUtil.isTravisCI() && !USE_MOCK) return new GitHubReleases();
+        if ((!CommonUtil.isTravisCI() && !USE_MOCK) || CommonUtil.isTravisCI()) return new GitHubReleases();
 
         new SystemStreamLog().info("Creation of MockGitHubReleases");
 
