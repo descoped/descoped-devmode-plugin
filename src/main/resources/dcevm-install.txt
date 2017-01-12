@@ -1,0 +1,9 @@
+
+------------------- IMPORTANT NOTICE --------------------
+Make sure you close all JVM Processes before you proceed!
+---------------------------------------------------------
+
+* JavaHome: @JAVA_HOME
+* Install DCEVM as AltJVM
+* Please read the DCEVM documentation at https://github.com/dcevm/dcevm/blob/master/README.md
+

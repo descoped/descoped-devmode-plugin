@@ -48,13 +48,13 @@ public class DevmodeTest extends AbstractMojoTestCase {
         LOGGER.info("project.build.sourceDirectory: " + System.getProperty("project.build.sourceDirectory"));
     }
 
-    public void testJavaHomeDcevm() throws Exception {
+    public void _testJavaHomeDcevm() throws Exception {
         HotswapInstaller installer = new HotswapInstaller();
         boolean exists = installer.isHotswapInstalled();
         LOGGER.info("-----> exists: " + exists);
     }
 
-    public void _testDcevm() throws Exception {
+    public void testDcevm() throws Exception {
         LOGGER.info("isMojoRunningInTestingHarness: " + CommonUtil.isMojoRunningInTestingHarness());
 
         HotswapInstaller installer = new HotswapInstaller();
@@ -74,7 +74,7 @@ public class DevmodeTest extends AbstractMojoTestCase {
         });
     }
 
-    public void _testHotswap() throws Exception {
+    public void testHotswap() throws Exception {
         HotswapInstaller installer = new HotswapInstaller();
         installer.findHotswapUrls();
         GitHubUrl latestVersion = installer.getHotswapLatestReleaseVersion();

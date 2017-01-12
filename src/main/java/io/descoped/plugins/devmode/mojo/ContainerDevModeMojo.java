@@ -10,9 +10,7 @@ import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -215,19 +213,21 @@ public class ContainerDevModeMojo extends AbstractMojo {
         return null;
     }
 
-    private void batchAddComments(StringBuffer bash) {
-        bash.append("echo \"\"\n");
-        bash.append("echo \"------------------- IMPORTANT NOTICE --------------------").append("\"\n");
-        bash.append("echo \"Make sure you close all JVM Processes before you proceed!").append("\"\n");
-        bash.append("echo \"---------------------------------------------------------").append("\"\n");
-        bash.append("echo \"\"\n");
-        bash.append("echo \"* JavaHome: ").append(System.getProperty("java.home")).append("\"\n");
-        bash.append("echo \"* Install DCEVM as AltJVM").append("\"\n");
-        bash.append("echo \"* Please read the DCEVM documentation at https://github.com/dcevm/dcevm/blob/master/README.md").append("\"\n\n");
-        bash.append("echo \"\"\n");
+    private String loadTemplate(String resourceName) throws IOException {
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        InputStream in = cl.getResourceAsStream(resourceName);
+        OutputStream out = CommonUtil.newOutputStream();
+        CommonUtil.writeInputToOutputStream(in, out);
+        return out.toString();
     }
 
-    private StringBuffer batchFileBufferDcevm(String installationFile) {
+    private void batchAddComments(StringBuffer bash) throws IOException {
+        String txt = loadTemplate("dcevm-install.txt");
+        txt.replace("@JAVA_HOME", System.getProperty("java.home"));
+        bash.append(txt);
+    }
+
+    private StringBuffer batchFileBufferDcevm(String installationFile) throws IOException {
         StringBuffer bash = new StringBuffer();
         bash.append("#!/bin/sh\n\n");
         batchAddComments(bash);
