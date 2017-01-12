@@ -78,7 +78,7 @@ public class GitHubReleasesTest {
         List<GitHubUrl> urls = installer.getDcevmReleaseList();
         assertEquals(5, urls.size());
         GitHubUrl matchUrl = installer.findMatchingDcevmVersion(urls);
-        LOGGER.info("---o  + = recommended");
+        LOGGER.info("---o  + = latest-release");
         LOGGER.info("---o  * = best-match");
         urls.forEach(url -> {
             boolean latest = (url.equalTo(latestVersion));

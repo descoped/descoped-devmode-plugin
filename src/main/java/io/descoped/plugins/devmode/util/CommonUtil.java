@@ -7,6 +7,7 @@ import org.apache.maven.project.MavenProject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -113,6 +114,7 @@ public class CommonUtil {
         LOGGER.info("------------> Environment Varaibles <------------");
         Map<String, String> env = System.getenv();
         for(Map.Entry<String,String> e : env.entrySet()) {
+            if (e.getKey().contains("CI_NEXUS")) continue;
             LOGGER.info(String.format("%s=%s", e.getKey(), e.getValue()));
         }
         LOGGER.info("------------> System Properties <------------");
@@ -147,4 +149,19 @@ public class CommonUtil {
         return buf.toString();
     }
 
+    public static synchronized long getPidOfProcess(Process p) {
+        long pid = -1;
+
+        try {
+            if (p.getClass().getName().equals("java.lang.UNIXProcess")) {
+                Field f = p.getClass().getDeclaredField("pid");
+                f.setAccessible(true);
+                pid = f.getLong(p);
+                f.setAccessible(false);
+            }
+        } catch (Exception e) {
+            pid = -1;
+        }
+        return pid;
+    }
 }

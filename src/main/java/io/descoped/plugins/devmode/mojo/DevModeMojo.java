@@ -11,7 +11,6 @@ import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
 
 import java.io.*;
-import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -66,27 +65,11 @@ public class DevModeMojo extends AbstractMojo {
         this.gitHubReleases = gitHubReleases;
     }
 
-    private GitHubReleases getGitHubReleases() {
+    private GitHubReleases gitHubReleases() {
         if (gitHubReleases == null) {
             gitHubReleases = new GitHubReleases();
         }
         return gitHubReleases;
-    }
-
-    private static synchronized long getPidOfProcess(Process p) {
-        long pid = -1;
-
-        try {
-            if (p.getClass().getName().equals("java.lang.UNIXProcess")) {
-                Field f = p.getClass().getDeclaredField("pid");
-                f.setAccessible(true);
-                pid = f.getLong(p);
-                f.setAccessible(false);
-            }
-        } catch (Exception e) {
-            pid = -1;
-        }
-        return pid;
     }
 
     private void checkLogger() {
@@ -181,9 +164,7 @@ public class DevModeMojo extends AbstractMojo {
     }
 
     private GitHubUrl selectDcevmOptions() throws MojoExecutionException {
-        GitHubReleases installer = getGitHubReleases();
-//        installer.findDcevmUrls();
-        List<GitHubUrl> releaseList = installer.getDcevmReleaseList();
+        List<GitHubUrl> releaseList = gitHubReleases().getDcevmReleaseList();
         LOGGER.info("Please select which version of Dcevm you want to install:");
         for (int n = 0; n < releaseList.size(); n++) {
             System.out.println(String.format("(%s) - %s", n, releaseList.get(n).getDecodedUrl()));
@@ -197,7 +178,7 @@ public class DevModeMojo extends AbstractMojo {
 
     private String validateDecevmInstallation() throws MojoExecutionException {
         if (!CommonUtil.isMojoRunningInTestingHarness()) {
-            GitHubReleases installer = getGitHubReleases();
+            GitHubReleases installer = gitHubReleases();
             if (installer.isHotswapInstalled() && !System.getProperties().containsKey("dcevm.forceUpdate")) {
                 LOGGER.info("Hotwap Installed: " + installer.isHotswapInstalled());
                 return null;
@@ -306,7 +287,7 @@ public class DevModeMojo extends AbstractMojo {
 
         LOGGER.info("Starting process in DevMode..");
         Process process = processBuilder.start();
-        LOGGER.info("Process PID: " + getPidOfProcess(process));
+        LOGGER.info("Process PID: " + CommonUtil.getPidOfProcess(process));
         if (waitFor) {
             process.waitFor();
             LOGGER.info("Process exited with code: " + process.exitValue());
@@ -321,9 +302,7 @@ public class DevModeMojo extends AbstractMojo {
             List<String> args = new ArrayList<>();
             args.add(getJavaHomeExecutable());
             {
-                GitHubReleases installer = getGitHubReleases();
-//                installer.findHotswapUrls();
-                List<GitHubUrl> releaseUrlList = installer.getHotswapReleaseList();
+                List<GitHubUrl> releaseUrlList = gitHubReleases().getHotswapReleaseList();
                 GitHubUrl latestVersion = releaseUrlList.get(0);
                 String url = latestVersion.getDecodedUrl();
                 Path path = Paths.get(url);
