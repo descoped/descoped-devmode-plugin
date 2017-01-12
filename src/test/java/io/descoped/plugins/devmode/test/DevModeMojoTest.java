@@ -1,17 +1,12 @@
 package io.descoped.plugins.devmode.test;
 
 import io.descoped.plugins.devmode.mojo.DevModeMojo;
-import io.descoped.plugins.devmode.mojo.GitHubReleases;
-import io.descoped.plugins.devmode.mojo.GitHubUrl;
-import io.descoped.plugins.devmode.mojo.JavaVersion;
-import io.descoped.plugins.devmode.util.CommonUtil;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,13 +21,14 @@ public class DevModeMojoTest extends AbstractMojoTestCase {
         super.setUp();
     }
 
-    public void _testMojoGoal() throws Exception {
-        File testPom = new File(getBasedir(), "src/test/resources/test-pom.xml");
-        DevModeMojo mojo = (DevModeMojo) lookupMojo("run", testPom);
-        Map map = new HashMap();
-        map.put("project", new MojoMavenProjectStub());
-        mojo.setPluginContext(map);
+    public void testMojoGoal() throws Exception {
         try {
+            File testPom = new File(getBasedir(), "src/test/resources/test-pom.xml");
+            DevModeMojo mojo = (DevModeMojo) lookupMojo("run", testPom);
+            mojo.setMockGitHubReleases(MockHelper.mockGitHubReleases());
+            Map map = new HashMap();
+            map.put("project", new MojoMavenProjectStub());
+            mojo.setPluginContext(map);
             mojo.execute();
         } catch (Exception e) {
             e.printStackTrace();
@@ -40,55 +36,4 @@ public class DevModeMojoTest extends AbstractMojoTestCase {
         }
     }
 
-    public void _testJavaVersion() throws Exception {
-        LOGGER.info("Java version: " + JavaVersion.getVersion() + " ver: " +
-                JavaVersion.getMajor() + " major: " + JavaVersion.getMinor()+ " minor: " + JavaVersion.getBuild() +
-                " isJdk8: " + JavaVersion.isJdk8());
-
-        LOGGER.info("project.build.sourceDirectory: " + System.getProperty("project.build.sourceDirectory"));
-    }
-
-    public void _testJavaHomeDcevm() throws Exception {
-        GitHubReleases installer = new GitHubReleases();
-        boolean exists = installer.isHotswapInstalled();
-        LOGGER.info("-----> exists: " + exists);
-    }
-
-    public void testDcevm() throws Exception {
-        LOGGER.info("isMojoRunningInTestingHarness: " + CommonUtil.isMojoRunningInTestingHarness());
-
-        GitHubReleases installer = new GitHubReleases();
-//        installer.findDcevmUrls();
-        GitHubUrl latestVersion = installer.getDcevmLatestReleaseVersion();
-        List<GitHubUrl> releaseUrlList = installer.getDcevmReleaseList();
-
-        assertNotNull(latestVersion.getUrl());
-        assertFalse(releaseUrlList.isEmpty());
-
-        releaseUrlList.forEach(downloadUrl -> {
-            String url = downloadUrl.getDecodedUrl();
-            if (downloadUrl.equalTo(latestVersion)) {
-                url += "(latest)";
-            }
-            LOGGER.info("Dvevm Release URL: " + url);
-        });
-    }
-
-    public void testHotswap() throws Exception {
-        GitHubReleases installer = new GitHubReleases();
-//        installer.findHotswapUrls();
-        GitHubUrl latestVersion = installer.getHotswapLatestReleaseVersion();
-        List<GitHubUrl> releaseUrlList = installer.getHotswapReleaseList();
-
-        assertNotNull(latestVersion.getUrl());
-        assertFalse(releaseUrlList.isEmpty());
-
-        releaseUrlList.forEach(downloadUrl -> {
-            String url = downloadUrl.getDecodedUrl();
-            if (downloadUrl.equalTo(latestVersion)) {
-                url += "(latest)";
-            }
-            LOGGER.info("Hotswap Release URL: " + url);
-        });
-    }
 }

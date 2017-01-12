@@ -60,6 +60,19 @@ public class DevModeMojo extends AbstractMojo {
     @Component
     private MavenProject project;
 
+    private GitHubReleases gitHubReleases;
+
+    public void setMockGitHubReleases(GitHubReleases gitHubReleases) {
+        this.gitHubReleases = gitHubReleases;
+    }
+
+    private GitHubReleases getGitHubReleases() {
+        if (gitHubReleases == null) {
+            gitHubReleases = new GitHubReleases();
+        }
+        return gitHubReleases;
+    }
+
     private static synchronized long getPidOfProcess(Process p) {
         long pid = -1;
 
@@ -168,7 +181,7 @@ public class DevModeMojo extends AbstractMojo {
     }
 
     private GitHubUrl selectDcevmOptions() throws MojoExecutionException {
-        GitHubReleases installer = new GitHubReleases();
+        GitHubReleases installer = getGitHubReleases();
 //        installer.findDcevmUrls();
         List<GitHubUrl> releaseList = installer.getDcevmReleaseList();
         LOGGER.info("Please select which version of Dcevm you want to install:");
@@ -184,7 +197,7 @@ public class DevModeMojo extends AbstractMojo {
 
     private String validateDecevmInstallation() throws MojoExecutionException {
         if (!CommonUtil.isMojoRunningInTestingHarness()) {
-            GitHubReleases installer = new GitHubReleases();
+            GitHubReleases installer = getGitHubReleases();
             if (installer.isHotswapInstalled() && !System.getProperties().containsKey("dcevm.forceUpdate")) {
                 LOGGER.info("Hotwap Installed: " + installer.isHotswapInstalled());
                 return null;
@@ -308,7 +321,7 @@ public class DevModeMojo extends AbstractMojo {
             List<String> args = new ArrayList<>();
             args.add(getJavaHomeExecutable());
             {
-                GitHubReleases installer = new GitHubReleases();
+                GitHubReleases installer = getGitHubReleases();
 //                installer.findHotswapUrls();
                 List<GitHubUrl> releaseUrlList = installer.getHotswapReleaseList();
                 GitHubUrl latestVersion = releaseUrlList.get(0);

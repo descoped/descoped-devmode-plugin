@@ -23,7 +23,12 @@ public class GitHubReleases {
     private static final String HOTSWAP_LATEST_RELEASE = "https://api.github.com/repos/HotswapProjects/HotswapAgent/releases/latest";
     private static final String HOTSWAP_RELEASES = "https://api.github.com/repos/HotswapProjects/HotswapAgent/releases";
 
-    public GitHubReleases() throws MojoExecutionException {
+    private GitHubUrl dcevmLatestReleaseUrl;
+    private List<GitHubUrl> dcevmReleaseUrls;
+    private GitHubUrl hotswapLatestReleaseUrl;
+    private List<GitHubUrl> hotswapReleaseUrls;
+
+    public GitHubReleases() {
     }
 
     private GitHubUrl getDcevmReleaseUrl(JSONObject json, String tagNameFilter, String urlFilter) {
@@ -58,18 +63,19 @@ public class GitHubReleases {
     }
 
     public GitHubUrl getDcevmLatestReleaseVersion() throws MojoExecutionException {
+        if (dcevmLatestReleaseUrl != null) return dcevmLatestReleaseUrl;
         HttpRequest req = HttpRequest.get(DCEVM_LATEST_RELEASE);
         if (req.ok()) {
             String body = req.body();
             JSONObject json = new JSONObject(body);
-            GitHubUrl url = getDcevmReleaseUrl(json, null, null);
-            return url;
+            return dcevmLatestReleaseUrl = getDcevmReleaseUrl(json, null, null);
         } else {
             throw new MojoExecutionException("Error fetching data due to http-error-code: " + req.code());
         }
     }
 
     public List<GitHubUrl> getDcevmReleaseList() throws MojoExecutionException {
+        if (dcevmReleaseUrls != null) return dcevmReleaseUrls;
         List<GitHubUrl> result = new ArrayList<>();
         HttpRequest req = HttpRequest.get(DCEVM_RELEASES_);
         if (req.ok()) {
@@ -97,22 +103,23 @@ public class GitHubReleases {
         } else {
             throw new MojoExecutionException("Error fetching data due to http-error-code: " + req.code());
         }
-        return result;
+        return dcevmReleaseUrls = result;
     }
 
     public GitHubUrl getHotswapLatestReleaseVersion() throws MojoExecutionException {
+        if (hotswapLatestReleaseUrl != null) return hotswapLatestReleaseUrl;
         HttpRequest req = HttpRequest.get(HOTSWAP_LATEST_RELEASE);
         String body = req.body();
         if (req.ok()) {
             JSONObject json = new JSONObject(body);
-            GitHubUrl url = getHotswapReleaseUrl(json);
-            return url;
+            return hotswapLatestReleaseUrl = getHotswapReleaseUrl(json);
         } else {
             throw new MojoExecutionException("Error fetching data due to http-error-code: " + req.code());
         }
     }
 
     public List<GitHubUrl> getHotswapReleaseList() throws MojoExecutionException {
+        if (hotswapReleaseUrls != null) return hotswapReleaseUrls;
         List<GitHubUrl> result = new ArrayList<>();
         HttpRequest req = HttpRequest.get(HOTSWAP_RELEASES);
         if (req.ok()) {
@@ -127,11 +134,11 @@ public class GitHubReleases {
         } else {
             throw new MojoExecutionException("Error fetching data due to http-error-code: " + req.code());
         }
-        return result;
+        return hotswapReleaseUrls = result;
     }
 
     public GitHubUrl findMatchingDcevmVersion(List<GitHubUrl> releases) {
-        String spec = String.format("light-jdk%su%s", (JavaVersion.isJdk8() ? "8" : "7"), JavaVersion.getMajor());
+        String spec = String.format("light-jdk%su%s", (JavaVersion.isJdk8() ? "8" : "7"), JavaVersion.getMinor());
         List<GitHubUrl> options = new ArrayList<>();
         releases.forEach(url -> {
             if (url.getTag().startsWith(spec)) {
@@ -139,5 +146,9 @@ public class GitHubReleases {
             }
         });
         return (options.isEmpty() ? null : options.get(0));
+    }
+
+    public GitHubUrl findMatchingHotswapVersion(List<GitHubUrl> urls) throws MojoExecutionException {
+        return (urls == null || urls.isEmpty() ? null : urls.get(0));
     }
 }
