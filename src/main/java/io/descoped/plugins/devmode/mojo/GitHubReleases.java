@@ -131,7 +131,7 @@ public class GitHubReleases {
     }
 
     public GitHubUrl findMatchingDcevmVersion(List<GitHubUrl> releases) {
-        String spec = String.format("light-jdk%su%s", (JavaVersion.isJdk8() ? "8" : "7"), JavaVersion.getMinor());
+        String spec = String.format("light-jdk%su%s", (JavaVersion.isJdk8() ? "8" : "7"), JavaVersion.getMajor());
         List<GitHubUrl> options = new ArrayList<>();
         releases.forEach(url -> {
             if (url.getTag().startsWith(spec)) {
