@@ -1,6 +1,7 @@
 package io.descoped.plugins.devmode.test;
 
 import io.descoped.plugins.devmode.mojo.DevModeMojo;
+import io.descoped.plugins.devmode.mojo.GitHubFactory;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
@@ -25,7 +26,7 @@ public class DevModeMojoTest extends AbstractMojoTestCase {
         try {
             File testPom = new File(getBasedir(), "src/test/resources/test-pom.xml");
             DevModeMojo mojo = (DevModeMojo) lookupMojo("run", testPom);
-            mojo.setMockGitHubReleases(MockHelper.mockGitHubReleases());
+            GitHubFactory.setMockInstance(MockHelper.mockGitHubReleases());
             Map map = new HashMap();
             map.put("project", new MojoMavenProjectStub());
             mojo.setPluginContext(map);

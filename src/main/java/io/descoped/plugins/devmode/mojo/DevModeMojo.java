@@ -59,17 +59,8 @@ public class DevModeMojo extends AbstractMojo {
     @Component
     private MavenProject project;
 
-    private GitHubReleases gitHubReleases;
-
-    public void setMockGitHubReleases(GitHubReleases gitHubReleases) {
-        this.gitHubReleases = gitHubReleases;
-    }
-
     private GitHubReleases gitHubReleases() {
-        if (gitHubReleases == null) {
-            gitHubReleases = new GitHubReleases();
-        }
-        return gitHubReleases;
+        return GitHubFactory.getInstance();
     }
 
     private void checkLogger() {
