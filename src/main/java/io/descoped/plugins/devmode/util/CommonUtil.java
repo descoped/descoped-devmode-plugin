@@ -3,13 +3,16 @@ package io.descoped.plugins.devmode.util;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import static java.lang.Boolean.TRUE;
 
@@ -18,8 +21,15 @@ import static java.lang.Boolean.TRUE;
  */
 public class CommonUtil {
 
+    // http://patorjk.com/software/taag/#p=display&f=Graffiti&t=Descoped
+    public static final String DESCOPED_LOGO = //"\n" +
+            "\t________                                               .___\n" +
+                    "\t\\______ \\   ____   ______ ____  ____ ______   ____   __| _/\n" +
+                    "\t |    |  \\_/ __ \\ /  ___// ___\\/  _ \\\\____ \\_/ __ \\ / __ | \n" +
+                    "\t |    `   \\  ___/ \\___ \\\\  \\__(  <_> )  |_> >  ___// /_/ | \n" +
+                    "\t/_______  /\\___  >____  >\\___  >____/|   __/ \\___  >____ | \n" +
+                    "\t        \\/     \\/     \\/     \\/      |__|        \\/     \\/ ";
     private static final Log LOGGER = Logger.INSTANCE;
-
     private static ThreadLocal<OutputStream> outputLocal = new ThreadLocal<OutputStream>() {
         private OutputStream output = null;
 
@@ -110,28 +120,28 @@ public class CommonUtil {
         CommonUtil.writeInputToOutputStream(in, out);
         log.info(msg + ": " + out);
     }
-    
+
     public static void printEnvVars() {
         LOGGER.info("------------> Environment Varaibles <------------");
         Map<String, String> env = System.getenv();
-        for(Map.Entry<String,String> e : env.entrySet()) {
+        for (Map.Entry<String, String> e : env.entrySet()) {
             if (e.getKey().contains("CI_NEXUS")) continue;
             LOGGER.info(String.format("%s=%s", e.getKey(), e.getValue()));
         }
         LOGGER.info("------------> System Properties <------------");
         Properties props = System.getProperties();
-        for(Map.Entry<Object, Object> e : props.entrySet()) {
+        for (Map.Entry<Object, Object> e : props.entrySet()) {
             LOGGER.info(String.format("%s=%s", e.getKey(), e.getValue()));
         }
         LOGGER.info("------------> -o-o-o-o-o-o-o <------------");
     }
 
     public static String trimLeft(String string) {
-        return string.replaceAll("^\\s+","");
+        return string.replaceAll("^\\s+", "");
     }
 
     public static String trimRight(String string) {
-        return string.replaceAll("\\s+$","");
+        return string.replaceAll("\\s+$", "");
     }
 
     public static String getOSString() {
@@ -161,7 +171,6 @@ public class CommonUtil {
 
     public static boolean isMojoRunningStandalone(MavenProject project) {
         boolean ok = Boolean.valueOf(project.getProperties().getProperty("test.mojo"));
-        LOGGER.info("-------------> test.mojo: " + ok);
         return ok;
     }
 
@@ -172,7 +181,7 @@ public class CommonUtil {
     public static String printList(List<?> list) {
         if (list == null || list.isEmpty()) return "(empty)";
         StringBuffer buf = new StringBuffer();
-        for(Object obj : list) {
+        for (Object obj : list) {
             buf.append(obj.toString() + "\n");
         }
         return buf.toString();
@@ -193,4 +202,71 @@ public class CommonUtil {
         }
         return pid;
     }
+
+    public static Thread consoleProgressThread(File file, long contentLength) {
+        Thread progressThread = new Thread(new ConsoleProgress(file, contentLength));
+        progressThread.start();
+        return progressThread;
+    }
+
+    // http://stackoverflow.com/questions/1001290/console-based-progress-in-java
+    public static void printProgress(long startTime, long total, long current) {
+        long eta = current == 0 ? 0 :
+                (total - current) * (System.currentTimeMillis() - startTime) / current;
+
+        String etaHms = current == 0 ? "N/A" :
+                String.format("%02d:%02d:%01d", TimeUnit.MILLISECONDS.toHours(eta),
+                        TimeUnit.MILLISECONDS.toMinutes(eta) % TimeUnit.HOURS.toMinutes(1),
+                        TimeUnit.MILLISECONDS.toSeconds(eta) % TimeUnit.MINUTES.toSeconds(1));
+
+        StringBuilder string = new StringBuilder(140);
+        int percent = (int) (current * 100 / total);
+        string
+                .append('\r')
+                .append(String.join("", Collections.nCopies(percent == 0 ? 2 : 2 - (int) (Math.log10(percent)), " ")))
+                .append(String.format(" %d%% [", percent))
+                .append(String.join("", Collections.nCopies(percent, "=")))
+                .append('>')
+                .append(String.join("", Collections.nCopies(100 - percent, " ")))
+                .append(']')
+                .append(String.join("", Collections.nCopies((int) (Math.log10(total)) - (int) (Math.log10(current)), " ")))
+                .append(String.format(" %d/%d, ETA: %s", current, total, etaHms));
+
+        System.out.print(string);
+    }
+
+    private static class ConsoleProgress implements Runnable {
+        private final File file;
+        private final long contentLength;
+
+        public ConsoleProgress(File file, long contentLength) {
+            this.file = file;
+            this.contentLength = contentLength;
+        }
+
+        @Override
+        public void run() {
+            long startTime = System.currentTimeMillis();
+            while (true) {
+                try {
+                    CommonUtil.printProgress(startTime, contentLength, (file.length() == 0 ? 1 : file.length()));
+                    Thread.currentThread().sleep(50);
+                } catch (InterruptedException e) {
+                    CommonUtil.printProgress(startTime, contentLength, (file.length() == 0 ? 1 : file.length()));
+                    System.out.println();
+                    break;
+                }
+            }
+        }
+    }
+
+    public static void interruptProgress(Thread progressThread) {
+        progressThread.interrupt();
+        try {
+            Thread.currentThread().sleep(50);
+        } catch (InterruptedException e) {
+        }
+    }
+
+
 }

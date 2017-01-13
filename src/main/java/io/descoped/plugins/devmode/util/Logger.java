@@ -8,6 +8,20 @@ import org.apache.maven.plugin.logging.SystemStreamLog;
  */
 final public class Logger {
 
-    public static Log INSTANCE = new SystemStreamLog();
+    public static Log INSTANCE = getLogger();
+    private static Log LOGGER = null;
+
+    private synchronized static Log getLogger() {
+        if (LOGGER == null) {
+            System.out.println("Create new SystemStreamLog instance");
+            LOGGER = new SystemStreamLog();
+        }
+        return LOGGER;
+    }
+
+    public static void setLogger(Log logger) {
+        System.out.println("Setting Mojo Logger: " + logger.getClass());
+        LOGGER = logger;
+    }
 
 }

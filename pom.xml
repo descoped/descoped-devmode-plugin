@@ -104,6 +104,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.codehaus.plexus</groupId>
+            <artifactId>plexus-utils</artifactId>
+            <version>3.0.24</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.github.kevinsawicki</groupId>
             <artifactId>http-request</artifactId>
         </dependency>
@@ -135,7 +141,7 @@
     </dependencies>
 
     <profiles>
-        <!-- mvn clean test-compile -Pmojo -->
+        <!-- mvn clean install -DskipTests -Pmojo -->
         <profile>
             <id>mojo</id>
             <properties>

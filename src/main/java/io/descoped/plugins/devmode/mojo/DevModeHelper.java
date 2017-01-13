@@ -8,10 +8,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -39,15 +36,35 @@ public class DevModeHelper {
         this.mainClass = mainClass;
     }
 
-    public void init() {
-        StringBuffer initMsg = new StringBuffer();
-        initMsg.append("Configuration:\n");
-        initMsg.append("\t--o  ").append("Project BasedDir: ").append(project.getBasedir()).append("\n");
-        initMsg.append("\t--o  ").append("Output directory: ").append(outputDirectory).append("\n");
-        initMsg.append("\t--o  ").append("Relative Output directory: ").append(relativeOutputDirectory()).append("\n");
-        initMsg.append("\t--o  ").append("Web Content directory: ").append(webContent).append("\n");
-        initMsg.append("\t--o  ").append("Main-Class: ").append(mainClass).append("\n");
-        LOGGER.info(initMsg);
+    public void init() throws MojoExecutionException {
+        try {
+            String txt = loadTemplate("mojo-config.txt");
+            txt = txt.replace("@BASEDIR", "\t"+project.getBasedir().getAbsolutePath());
+            txt = txt.replace("@OUTPUT_DIRECTORY", "\t"+outputDirectory.getAbsolutePath());
+            txt = txt.replace("@RELATIVE_OUTPUT_DIRECTORY", "\t"+relativeOutputDirectory());
+            txt = txt.replace("@WEB_CONTENT_DIRECTORY", "\t"+webContent);
+            txt = txt.replace("@JAVA_HOME", "\t"+System.getProperty("java.home"));
+            txt = txt.replace("@MAIN_CLASS", "\t\t"+mainClass);
+            BufferedReader reader = new BufferedReader(new StringReader(CommonUtil.trimRight(txt)));
+            String line;
+            System.out.println();
+            while ((line = reader.readLine()) != null) {
+                if (line.trim().equals("")) continue;
+                System.out.println(line);
+            }
+        } catch (IOException e) {
+            throw new MojoExecutionException("Error with template!", e);
+        }
+
+//        StringBuffer initMsg = new StringBuffer();
+//        initMsg.append("Configuration:\n");
+//        initMsg.append("\t--o  ").append("Project BasedDir: ").append(project.getBasedir()).append("\n");
+//        initMsg.append("\t--o  ").append("Output directory: ").append(outputDirectory).append("\n");
+//        initMsg.append("\t--o  ").append("Relative Output directory: ").append(relativeOutputDirectory()).append("\n");
+//        initMsg.append("\t--o  ").append("Web Content directory: ").append(webContent).append("\n");
+//        initMsg.append("\t--o  ").append("JavaHome directory: ").append(System.getProperty("java.home")).append("\n");
+//        initMsg.append("\t--o  ").append("Main-Class: ").append(mainClass).append("\n");
+//        LOGGER.info(initMsg);
     }
 
     public String relativeOutputDirectory() {
@@ -150,12 +167,16 @@ public class DevModeHelper {
         return path;
     }
 
-    public String loadTemplate(String resourceName) throws IOException {
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
-        InputStream in = cl.getResourceAsStream(resourceName);
-        OutputStream out = CommonUtil.newOutputStream();
-        CommonUtil.writeInputToOutputStream(in, out);
-        return out.toString();
+    public String loadTemplate(String resourceName) throws MojoExecutionException {
+        try {
+            ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            InputStream in = cl.getResourceAsStream(resourceName);
+            OutputStream out = CommonUtil.newOutputStream();
+            CommonUtil.writeInputToOutputStream(in, out);
+            return out.toString();
+        } catch (IOException e) {
+            throw new MojoExecutionException("Error loading template: " + resourceName, e);
+        }
     }
 
     public void exec(String execDirectory, List<String> args, boolean sudo, boolean waitFor, boolean printCommand) throws IOException, InterruptedException {

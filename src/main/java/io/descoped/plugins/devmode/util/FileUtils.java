@@ -52,9 +52,9 @@ public class FileUtils {
         if (!Files.isDirectory(directory)) {
             Path dir;
             if ((dir = Files.createDirectories(directory)) != null) {
-                LOGGER.info(String.format("Created directory: %s", dir.toString()));
+                LOGGER.debug(String.format("Created directory: %s", dir.toString()));
             } else {
-                LOGGER.info(String.format("Unable to create directory: %s", dir.toString()));
+                LOGGER.debug(String.format("Unable to create directory: %s", dir.toString()));
             }
         }
     }
