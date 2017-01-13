@@ -33,7 +33,7 @@ public class GitHubReleasesTest {
     }
 
     private void batchAddComments(StringBuffer bash) throws IOException {
-        String txt = loadTemplate("dcevm-install.txt");
+        String txt = loadTemplate("hotswap-install-help.txt");
         txt = txt.replace("@JAVA_HOME", System.getProperty("java.home"));
         bash.append(txt);
     }
@@ -55,38 +55,11 @@ public class GitHubReleasesTest {
     }
 
     @Test
-    public void testJavaHomeDcevm() throws Exception {
-        GitHubReleases installer = mock(GitHubReleases.class);
-        when(installer.isHotswapInstalled()).thenReturn(false);
-        boolean exists = installer.isHotswapInstalled();
+    public void testIfHotswapIsInstalled() throws Exception {
+        GitHubReleases releases = mock(GitHubReleases.class);
+        when(releases.isHotswapInstalled()).thenReturn(false);
+        boolean exists = releases.isHotswapInstalled();
         assertFalse(exists);
-    }
-
-    @Test
-    public void testDcevmLatestRelease() throws Exception {
-        GitHubReleases installer = MockHelper.mockGitHubReleases();
-        GitHubUrl url = installer.getDcevmLatestReleaseVersion();
-        assertNotNull(url.getTag());
-        assertNotNull(url.getUrl());
-        LOGGER.info("DcevmLatestRelease\t..tagName: " + url.getTag() + " \tbrowser_download_url: " + url.getUrl());
-    }
-
-    @Test
-    public void testDcevmReleases() throws Exception {
-        GitHubReleases installer = MockHelper.mockGitHubReleases();
-        GitHubUrl latestVersion = installer.getDcevmLatestReleaseVersion();
-        List<GitHubUrl> urls = installer.getDcevmReleaseList();
-        if (!CommonUtil.isTravisCI()) assertEquals(5, urls.size());
-        GitHubUrl matchUrl = installer.findMatchingDcevmVersion(urls);
-        LOGGER.info("---o  + = latest-release");
-        LOGGER.info("---o  * = best-match");
-        urls.forEach(url -> {
-            boolean latest = (url.equalTo(latestVersion));
-            boolean match = (url.equalTo(matchUrl));
-            String tail = String.format(" %s", (latest ? "(+)" : ""));
-            tail += String.format(" %s", (match ? "(*)" : ""));
-            LOGGER.info("DcevmReleases\t\t..tagName: " + url.getTag() + " \tbrowser_download_url: " + url.getUrl() + tail);
-        });
     }
 
     @Test
@@ -95,7 +68,7 @@ public class GitHubReleasesTest {
         GitHubUrl url = installer.getHotswapLatestReleaseVersion();
         assertNotNull(url.getTag());
         assertNotNull(url.getUrl());
-        LOGGER.info("HotswapLatestRelease\t..tagName: " + url.getTag() + " \t\t\tbrowser_download_url: " + url.getUrl());
+        LOGGER.info("HotswapLatestRelease\t..tagName: " + url.getTag() + " \tbrowser_download_url: " + url.getUrl());
     }
 
     @Test
@@ -103,14 +76,41 @@ public class GitHubReleasesTest {
         GitHubReleases installer = MockHelper.mockGitHubReleases();
         GitHubUrl latestVersion = installer.getHotswapLatestReleaseVersion();
         List<GitHubUrl> urls = installer.getHotswapReleaseList();
-        if (!CommonUtil.isTravisCI()) assertEquals(3, urls.size());
+        if (!CommonUtil.isTravisCI()) assertEquals(5, urls.size());
         GitHubUrl matchUrl = installer.findMatchingHotswapVersion(urls);
+        LOGGER.info("---o  + = latest-release");
+        LOGGER.info("---o  * = best-match");
         urls.forEach(url -> {
             boolean latest = (url.equalTo(latestVersion));
             boolean match = (url.equalTo(matchUrl));
             String tail = String.format(" %s", (latest ? "(+)" : ""));
             tail += String.format(" %s", (match ? "(*)" : ""));
             LOGGER.info("HotswapReleases\t\t..tagName: " + url.getTag() + " \tbrowser_download_url: " + url.getUrl() + tail);
+        });
+    }
+
+    @Test
+    public void testHotswapAgentLatestRelease() throws Exception {
+        GitHubReleases installer = MockHelper.mockGitHubReleases();
+        GitHubUrl url = installer.getHotswapAgentLatestReleaseVersion();
+        assertNotNull(url.getTag());
+        assertNotNull(url.getUrl());
+        LOGGER.info("HotswapAgentLatestRelease\t..tagName: " + url.getTag() + " \t\t\tbrowser_download_url: " + url.getUrl());
+    }
+
+    @Test
+    public void testHotswapAgentReleases() throws Exception {
+        GitHubReleases installer = MockHelper.mockGitHubReleases();
+        GitHubUrl latestVersion = installer.getHotswapAgentLatestReleaseVersion();
+        List<GitHubUrl> urls = installer.getHotswapAgentReleaseList();
+        if (!CommonUtil.isTravisCI()) assertEquals(3, urls.size());
+        GitHubUrl matchUrl = installer.findMatchingHotswapAgentVersion(urls);
+        urls.forEach(url -> {
+            boolean latest = (url.equalTo(latestVersion));
+            boolean match = (url.equalTo(matchUrl));
+            String tail = String.format(" %s", (latest ? "(+)" : ""));
+            tail += String.format(" %s", (match ? "(*)" : ""));
+            LOGGER.info("HotswapAgentReleases\t\t..tagName: " + url.getTag() + " \tbrowser_download_url: " + url.getUrl() + tail);
         });
     }
 

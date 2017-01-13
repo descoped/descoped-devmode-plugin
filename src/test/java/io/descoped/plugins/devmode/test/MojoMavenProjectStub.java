@@ -31,7 +31,7 @@ public class MojoMavenProjectStub extends MavenProjectStub {
 
     @Override
     public File getFile() {
-        return new File(FileUtils.getCurrentPath().toString());
+        return new File(FileUtils.currentPath());
     }
 
     @Override

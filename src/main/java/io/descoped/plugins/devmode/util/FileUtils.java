@@ -44,6 +44,10 @@ public class FileUtils {
         return Paths.get("").toAbsolutePath();
     }
 
+    public static String currentPath() {
+        return getCurrentPath().toString();
+    }
+
     public static void createDirectories(Path directory) throws IOException {
         if (!Files.isDirectory(directory)) {
             Path dir;

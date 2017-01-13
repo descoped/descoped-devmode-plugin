@@ -25,7 +25,7 @@ public class MockHelper {
         new SystemStreamLog().info("Creation of MockGitHubReleases");
 
         GitHubReleases installer = mock(GitHubReleases.class);
-        when(installer.getDcevmLatestReleaseVersion()).thenReturn(new GitHubUrl("light-jdk8u112+8", "https://github.com/dcevm/dcevm/releases/download/light-jdk8u112%2B8/DCEVM-light-8u112-installer.jar"));
+        when(installer.getHotswapLatestReleaseVersion()).thenReturn(new GitHubUrl("light-jdk8u112+8", "https://github.com/dcevm/dcevm/releases/download/light-jdk8u112%2B8/DCEVM-light-8u112-installer.jar"));
 
         List<GitHubUrl> dcevmReleaseList = new ArrayList<>();
         dcevmReleaseList.add(new GitHubUrl("light-jdk8u112+8", "https://github.com/dcevm/dcevm/releases/download/light-jdk8u112%2B8/DCEVM-light-8u112-installer.jar"));
@@ -33,18 +33,18 @@ public class MockHelper {
         dcevmReleaseList.add(new GitHubUrl("light-jdk8u112+6", "https://github.com/dcevm/dcevm/releases/download/light-jdk8u112%2B6/DCEVM-light-8u112-installer.jar"));
         dcevmReleaseList.add(new GitHubUrl("light-jdk8u92+1", "https://github.com/dcevm/dcevm/releases/download/light-jdk8u92%2B1/DCEVM-light-8u92-installer.jar"));
         dcevmReleaseList.add(new GitHubUrl("light-jdk7u79+3", "https://github.com/dcevm/dcevm/releases/download/light-jdk7u79%2B3/DCEVM-light-7u79-installer.jar"));
-        when(installer.getDcevmReleaseList()).thenReturn(dcevmReleaseList);
+        when(installer.getHotswapReleaseList()).thenReturn(dcevmReleaseList);
 
-        when(installer.getHotswapLatestReleaseVersion()).thenReturn(new GitHubUrl("1.0", "https://github.com/HotswapProjects/HotswapAgent/releases/download/1.0/hotswap-agent-1.0.jar"));
+        when(installer.getHotswapAgentLatestReleaseVersion()).thenReturn(new GitHubUrl("1.0", "https://github.com/HotswapProjects/HotswapAgent/releases/download/1.0/hotswap-agent-1.0.jar"));
 
         List<GitHubUrl> hotswapReleaseList = new ArrayList<>();
         hotswapReleaseList.add(new GitHubUrl("1.0.1-SNAPSHOT", "https://github.com/HotswapProjects/HotswapAgent/releases/download/1.0.1-SNAPSHOT/hotswap-agent-1.0.1-SNAPSHOT.jar"));
         hotswapReleaseList.add(new GitHubUrl("1.0", "https://github.com/HotswapProjects/HotswapAgent/releases/download/1.0/hotswap-agent-1.0.jar"));
         hotswapReleaseList.add(new GitHubUrl("0.3.0-SNAPSHOT@2016/02/15", "https://github.com/HotswapProjects/HotswapAgent/releases/download/0.3.0-SNAPSHOT%402016/02/15/hotswap-agent.jar"));
-        when(installer.getHotswapReleaseList()).thenReturn(hotswapReleaseList);
+        when(installer.getHotswapAgentReleaseList()).thenReturn(hotswapReleaseList);
 
-        when(installer.findMatchingDcevmVersion(installer.getDcevmReleaseList())).thenCallRealMethod();
         when(installer.findMatchingHotswapVersion(installer.getHotswapReleaseList())).thenCallRealMethod();
+        when(installer.findMatchingHotswapAgentVersion(installer.getHotswapAgentReleaseList())).thenCallRealMethod();
 
         return installer;
     }

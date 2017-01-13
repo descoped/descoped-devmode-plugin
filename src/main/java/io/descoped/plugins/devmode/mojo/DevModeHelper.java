@@ -43,9 +43,15 @@ public class DevModeHelper {
         StringBuffer initMsg = new StringBuffer();
         initMsg.append("Configuration:\n");
         initMsg.append("\t--o  ").append("Project BasedDir: ").append(project.getBasedir()).append("\n");
+        initMsg.append("\t--o  ").append("Output directory: ").append(outputDirectory).append("\n");
+        initMsg.append("\t--o  ").append("Relative Output directory: ").append(relativeOutputDirectory()).append("\n");
         initMsg.append("\t--o  ").append("Web Content directory: ").append(webContent).append("\n");
         initMsg.append("\t--o  ").append("Main-Class: ").append(mainClass).append("\n");
         LOGGER.info(initMsg);
+    }
+
+    public String relativeOutputDirectory() {
+        return outputDirectory.getAbsolutePath().replace(FileUtils.currentPath()+"/", "");
     }
 
     public void validateOutputDirectory() throws MojoExecutionException {
@@ -64,7 +70,7 @@ public class DevModeHelper {
         try {
             StringBuffer path = new StringBuffer();
 
-            String currentPath = FileUtils.getCurrentPath().toString();
+            String currentPath = FileUtils.currentPath();
             path.append(currentPath).append("/").append(webContent).append(":");
             path.append(currentPath).append("/").append("target/classes").append(":");
             if (CommonUtil.isMojoRunningInTestingHarness() || CommonUtil.isMojoRunningStandalone(project)) {
@@ -84,7 +90,7 @@ public class DevModeHelper {
             }
             return path.toString();
         } catch (DependencyResolutionRequiredException e) {
-            throw new MojoExecutionException("Error resolving classpath deps", e);
+            throw new MojoExecutionException("Error resolving classpath dependencies!", e);
         }
     }
 
@@ -96,9 +102,9 @@ public class DevModeHelper {
             if (CommonUtil.isMojoRunningInTestingHarness() || CommonUtil.isMojoRunningStandalone(project)) {
                 if (classpathElements == null) {
                     classpathElements = new ArrayList<>();
-                    classpathElements.add(0, FileUtils.getCurrentPath().toString() + "/target/classes");
+                    classpathElements.add(0, FileUtils.currentPath() + "/target/classes");
                 }
-                classpathElements.add(0, FileUtils.getCurrentPath().toString() + "/target/test-classes");
+                classpathElements.add(0, FileUtils.currentPath() + "/target/test-classes");
             }
 
             // only for mojo testing
@@ -162,9 +168,6 @@ public class DevModeHelper {
             LOGGER.debug("Command:\n" + cmd);
         }
         processBuilder.directory(Paths.get(execDirectory).toFile());
-        processBuilder.redirectInput(ProcessBuilder.Redirect.INHERIT);
-        processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
-        processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
         processBuilder.inheritIO();
 
         LOGGER.info("Starting process in DevMode..");

@@ -72,46 +72,46 @@ public class DevModeMojo extends AbstractMojo {
 
         if (!helper.findClass(mainClass)) {
             throw new MojoExecutionException("Error locating class: " + mainClass + "\nClass-path: " + System.getProperty("java.class.path"));
-        };
+        }
 
-        String installationFile = validateDecevmInstallation();
+        String installationFile = validateHotswapInstallation();
         if (installationFile != null) {
-            installDcevm(installationFile);
+            installHotswap(installationFile);
         }
 
         exec(mainClass);
     }
 
-    private GitHubUrl selectDcevmOptions() throws MojoExecutionException {
-        List<GitHubUrl> releaseList = gitHubReleases().getDcevmReleaseList();
-        LOGGER.info("Please select which version of Dcevm you want to install:");
+    private GitHubUrl selectHotswapOption() throws MojoExecutionException {
+        List<GitHubUrl> releaseList = gitHubReleases().getHotswapReleaseList();
+        LOGGER.info("Please select which version of DCEVM Hotswap you want to install:");
         for (int n = 0; n < releaseList.size(); n++) {
             System.out.println(String.format("(%s) - %s", n, releaseList.get(n).getTag()));
         }
         Scanner scanner = new Scanner(System.in);
         System.out.print("Enter: ");
-        String dcevmOption = scanner.next();
-        LOGGER.info("-----> You selected option: " + dcevmOption);
-        return releaseList.get(Integer.valueOf(dcevmOption));
+        String hotswapOption = scanner.next();
+        LOGGER.info("-----> You selected option: " + hotswapOption);
+        return releaseList.get(Integer.valueOf(hotswapOption));
     }
 
-    private String validateDecevmInstallation() throws MojoExecutionException {
+    private String validateHotswapInstallation() throws MojoExecutionException {
         if (CommonUtil.isMojoRunningInTestingHarness()) {
             LOGGER.info("Skipping user input! Setting default values......");
             return null;
         }
-        if (gitHubReleases().isHotswapInstalled() && !System.getProperties().containsKey("dcevm.forceUpdate")) {
-            LOGGER.info("Hotwap Installed: " + gitHubReleases().isHotswapInstalled());
+        if (gitHubReleases().isHotswapInstalled() && !System.getProperties().containsKey("hotswapUpdate")) {
+            LOGGER.info("Hotswap Installed: " + gitHubReleases().isHotswapInstalled());
             return null;
         }
 
-        GitHubUrl dcevmOption = selectDcevmOptions();
-        LOGGER.info("Downloading " + dcevmOption.getUrl());
+        GitHubUrl hotswapOption = selectHotswapOption();
+        LOGGER.info("Downloading " + hotswapOption.getUrl());
 
-        HttpRequest req = HttpRequest.get(dcevmOption.getUrl());
+        HttpRequest req = HttpRequest.get(hotswapOption.getUrl());
         if (req.ok()) {
             try {
-                File tmp = File.createTempFile("dcevm", ".jar");
+                File tmp = File.createTempFile("hotswap", ".jar");
                 req.receive(tmp);
                 String tmpFile = tmp.getAbsoluteFile().toString();
                 LOGGER.info("TempFile: " + tmpFile);
@@ -124,48 +124,50 @@ public class DevModeMojo extends AbstractMojo {
     }
 
 
-    private void batchAddComments(StringBuffer bash) throws IOException {
-        String txt = helper.loadTemplate("dcevm-install.txt");
+    private void createHotswapBatchInstallScript(String installationFile) throws IOException {
+        String txt = helper.loadTemplate("hotswap-install-help.txt");
         txt = txt.replace("@JAVA_HOME", System.getProperty("java.home"));
-        BufferedReader reader = new BufferedReader(new StringReader(txt));
-        String line;
-        while((line = reader.readLine()) != null){
-            bash.append("echo \"").append(line).append("\"\n");
-        }
-    }
 
-    private StringBuffer batchFileBufferDcevm(String installationFile) throws IOException {
+        BufferedReader reader = new BufferedReader(new StringReader(CommonUtil.trimRight(txt)));
         StringBuffer bash = new StringBuffer();
-        bash.append("#!/bin/sh\n\n");
-        batchAddComments(bash);
-        bash.append("cd ").append(System.getProperty("java.home")).append("\n");
-        bash.append("sudo bash -c ").append("'");
-        bash.append(helper.getJavaHomeExecutable()).append(" ");
-        bash.append("-jar ");
-        bash.append(installationFile).append("'\n");
-        return bash;
+        {
+            bash.append("#!/bin/sh\n\n");
+            bash.append("echo \"\"\n");
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.trim().equals("")) continue;
+                bash.append("echo \"").append(line).append("\"\n");
+            }
+            bash.append("echo \"\"\n");
+            bash.append("cd ").append(System.getProperty("java.home").replace("/jre", "/")).append("\n");
+            bash.append("sudo bash -c ").append("'");
+            bash.append(helper.getJavaHomeExecutable()).append(" ");
+            bash.append("-jar ");
+            bash.append(installationFile).append("'\n");
+        }
+
+        File bashFile = new File(String.format("%s/%s/installJvmHotswap.sh", FileUtils.currentPath(), helper.relativeOutputDirectory()));
+        FileUtils.writeContent(bashFile, bash.toString());
+        FileUtils.chmodOwnerExec(bashFile);
     }
 
-    private void installDcevm(String installationFile) throws MojoExecutionException {
+    private void installHotswap(String installationFile) throws MojoExecutionException {
         try {
             List<String> args = new ArrayList<>();
             args.add("/bin/sh");
             args.add("-i");
-            args.add("./target/installDcev.sh");
-            LOGGER.info("Install Dcevm: " + installationFile);
+            args.add(String.format("./%s/installJvmHotswap.sh", helper.relativeOutputDirectory()));
+            LOGGER.info("Install DCEVM Hotswap: " + installationFile);
 
-            StringBuffer bash = batchFileBufferDcevm(installationFile);
-            File bashFile = new File(FileUtils.getCurrentPath().toString() + "/target/installDcev.sh");
-            FileUtils.writeContent(bashFile, bash.toString());
-            FileUtils.chmodOwnerExec(bashFile);
+            createHotswapBatchInstallScript(installationFile);
 
 //            LOGGER.info("\n" + bash.toString());
 
-            helper.exec(FileUtils.getCurrentPath().toString(), args, false, true, true);
+            helper.exec(FileUtils.currentPath(), args, false, true, true);
             LOGGER.info("Installation is completed!");
             System.exit(-1);
         } catch (IOException | InterruptedException e) {
-            throw new MojoExecutionException("Error installing Dcevm!", e);
+            throw new MojoExecutionException("Error installing DCEVM Hotswap!", e);
         }
     }
 
@@ -174,7 +176,7 @@ public class DevModeMojo extends AbstractMojo {
             List<String> args = new ArrayList<>();
             args.add(helper.getJavaHomeExecutable());
             {
-                List<GitHubUrl> releaseUrlList = gitHubReleases().getHotswapReleaseList();
+                List<GitHubUrl> releaseUrlList = gitHubReleases().getHotswapAgentReleaseList();
                 GitHubUrl latestVersion = releaseUrlList.get(0);
                 String url = latestVersion.getDecodedUrl();
                 Path path = Paths.get(url);
@@ -200,7 +202,7 @@ public class DevModeMojo extends AbstractMojo {
             args.add(helper.getCompilePlusRuntimeClasspathJars());
             args.add(clazz);
 
-            helper.exec(FileUtils.getCurrentPath().toString(), args, false, true, true);
+            helper.exec(FileUtils.currentPath(), args, false, true, true);
         } catch (IOException | InterruptedException e) {
             throw new MojoExecutionException("Error starting Java process!", e);
         }

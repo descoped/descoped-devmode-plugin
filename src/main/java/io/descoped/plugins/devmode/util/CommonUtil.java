@@ -126,6 +126,30 @@ public class CommonUtil {
         LOGGER.info("------------> -o-o-o-o-o-o-o <------------");
     }
 
+    public static String trimLeft(String string) {
+        return string.replaceAll("^\\s+","");
+    }
+
+    public static String trimRight(String string) {
+        return string.replaceAll("\\s+$","");
+    }
+
+    public static String getOSString() {
+        return System.getProperties().get("os.name") + " " + System.getProperties().get("os.version");
+    }
+
+    public static boolean isLinux() {
+        return (getOSString().contains("Linux"));
+    }
+
+    public static boolean isMacOS() {
+        return ((getOSString().contains("MacOS")) || (getOSString().contains("OS X")));
+    }
+
+    public static boolean isWindows() {
+        return getOSString().contains("Windows");
+    }
+
     public static boolean isMojoRunningInTestingHarness() {
         try {
             Class<?> mojo = Class.forName("org.apache.maven.plugin.testing.AbstractMojoTestCase");
