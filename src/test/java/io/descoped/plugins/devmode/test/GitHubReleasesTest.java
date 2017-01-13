@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 public class GitHubReleasesTest {
 
     private static final Log LOGGER = Logger.INSTANCE;
+    private static String JDK_VERSION = String.format("%s-u%s_%s", (JavaVersion.isJdk8() ? "8" : "7"), JavaVersion.getMinor(), JavaVersion.getBuild());
 
     private String loadTemplate(String resourceName) throws IOException {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();
@@ -34,7 +35,7 @@ public class GitHubReleasesTest {
 
     private void batchAddComments(StringBuffer bash) throws IOException {
         String txt = loadTemplate("hotswap-install-help.txt");
-        txt = txt.replace("@JAVA_HOME", System.getProperty("java.home"));
+        txt = txt.replace("@JDK_VERSION", JDK_VERSION);
         bash.append(txt);
     }
 
@@ -42,7 +43,7 @@ public class GitHubReleasesTest {
     public void testMessage() throws Exception {
         StringBuffer buf = new StringBuffer();
         batchAddComments(buf);
-        assertTrue(buf.toString().contains(System.getProperty("java.home")));
+        assertTrue(buf.toString().contains(JDK_VERSION));
         LOGGER.info(buf.toString());
     }
 
