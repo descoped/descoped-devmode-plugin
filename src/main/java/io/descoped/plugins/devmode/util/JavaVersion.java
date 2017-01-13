@@ -1,4 +1,4 @@
-package io.descoped.plugins.devmode.mojo;
+package io.descoped.plugins.devmode.util;
 
 /**
  * Created by oranheim on 08/01/2017.

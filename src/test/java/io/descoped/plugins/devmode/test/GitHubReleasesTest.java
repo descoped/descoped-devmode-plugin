@@ -2,10 +2,10 @@ package io.descoped.plugins.devmode.test;
 
 import io.descoped.plugins.devmode.mojo.GitHubReleases;
 import io.descoped.plugins.devmode.mojo.GitHubUrl;
-import io.descoped.plugins.devmode.mojo.JavaVersion;
 import io.descoped.plugins.devmode.util.CommonUtil;
+import io.descoped.plugins.devmode.util.JavaVersion;
+import io.descoped.plugins.devmode.util.Logger;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
  */
 public class GitHubReleasesTest {
 
-    private static final Log LOGGER = new SystemStreamLog();
+    private static final Log LOGGER = Logger.INSTANCE;
 
     private String loadTemplate(String resourceName) throws IOException {
         ClassLoader cl = Thread.currentThread().getContextClassLoader();

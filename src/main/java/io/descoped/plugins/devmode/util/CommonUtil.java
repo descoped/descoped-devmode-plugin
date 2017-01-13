@@ -1,7 +1,6 @@
 package io.descoped.plugins.devmode.util;
 
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.apache.maven.project.MavenProject;
 
 import java.io.IOException;
@@ -19,7 +18,7 @@ import static java.lang.Boolean.TRUE;
  */
 public class CommonUtil {
 
-    private static final Log LOGGER = new SystemStreamLog();
+    private static final Log LOGGER = Logger.INSTANCE;
 
     private static ThreadLocal<OutputStream> outputLocal = new ThreadLocal<OutputStream>() {
         private OutputStream output = null;

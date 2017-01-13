@@ -17,7 +17,6 @@ package io.descoped.plugins.devmode.util;
  */
 
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugin.logging.SystemStreamLog;
 
 import java.io.*;
 import java.nio.channels.FileLock;
@@ -36,7 +35,7 @@ import java.util.Set;
  */
 public class FileUtils {
 
-    private static final Log LOGGER = new SystemStreamLog();
+    private static final Log LOGGER = Logger.INSTANCE;
 
     /* added by Ove Ranheim */
     private static Path currentPath;

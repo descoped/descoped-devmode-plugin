@@ -1,9 +1,10 @@
 package io.descoped.plugins.devmode.mojo;
 
 import com.github.kevinsawicki.http.HttpRequest;
+import io.descoped.plugins.devmode.util.JavaVersion;
+import io.descoped.plugins.devmode.util.Logger;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -17,7 +18,7 @@ import java.util.List;
  */
 public class GitHubReleases {
 
-    private static final Log LOGGER = new SystemStreamLog();
+    private static final Log LOGGER = Logger.INSTANCE;
     private static final String DCEVM_LATEST_RELEASE = "https://api.github.com/repos/dcevm/dcevm/releases/latest";
     private static final String DCEVM_RELEASES_ = "https://api.github.com/repos/dcevm/dcevm/releases";
     private static final String HOTSWAP_LATEST_RELEASE = "https://api.github.com/repos/HotswapProjects/HotswapAgent/releases/latest";

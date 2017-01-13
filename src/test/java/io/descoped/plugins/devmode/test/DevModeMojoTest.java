@@ -2,8 +2,8 @@ package io.descoped.plugins.devmode.test;
 
 import io.descoped.plugins.devmode.mojo.DevModeMojo;
 import io.descoped.plugins.devmode.mojo.GitHubFactory;
+import io.descoped.plugins.devmode.util.Logger;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.apache.maven.plugin.testing.AbstractMojoTestCase;
 
 import java.io.File;
@@ -15,7 +15,7 @@ import java.util.Map;
  */
 public class DevModeMojoTest extends AbstractMojoTestCase {
 
-    private static final Log LOGGER = new SystemStreamLog();
+    private static final Log LOGGER = Logger.INSTANCE;
 
     @Override
     protected void setUp() throws Exception {
