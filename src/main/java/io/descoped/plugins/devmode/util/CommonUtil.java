@@ -22,7 +22,7 @@ import static java.lang.Boolean.TRUE;
 public class CommonUtil {
 
     // http://patorjk.com/software/taag/#p=display&f=Graffiti&t=Descoped
-    public static final String DESCOPED_LOGO = //"\n" +
+    public static final String DESCOPED_LOGO = "\n" +
             "\t________                                               .___\n" +
                     "\t\\______ \\   ____   ______ ____  ____ ______   ____   __| _/\n" +
                     "\t |    |  \\_/ __ \\ /  ___// ___\\/  _ \\\\____ \\_/ __ \\ / __ | \n" +

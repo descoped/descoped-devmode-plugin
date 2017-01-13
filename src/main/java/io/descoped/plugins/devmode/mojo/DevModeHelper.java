@@ -55,16 +55,6 @@ public class DevModeHelper {
         } catch (IOException e) {
             throw new MojoExecutionException("Error with template!", e);
         }
-
-//        StringBuffer initMsg = new StringBuffer();
-//        initMsg.append("Configuration:\n");
-//        initMsg.append("\t--o  ").append("Project BasedDir: ").append(project.getBasedir()).append("\n");
-//        initMsg.append("\t--o  ").append("Output directory: ").append(outputDirectory).append("\n");
-//        initMsg.append("\t--o  ").append("Relative Output directory: ").append(relativeOutputDirectory()).append("\n");
-//        initMsg.append("\t--o  ").append("Web Content directory: ").append(webContent).append("\n");
-//        initMsg.append("\t--o  ").append("JavaHome directory: ").append(System.getProperty("java.home")).append("\n");
-//        initMsg.append("\t--o  ").append("Main-Class: ").append(mainClass).append("\n");
-//        LOGGER.info(initMsg);
     }
 
     public String relativeOutputDirectory() {
