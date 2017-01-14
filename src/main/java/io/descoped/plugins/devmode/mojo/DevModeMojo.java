@@ -19,7 +19,13 @@ public class DevModeMojo extends AbstractMojo {
     private static Log LOGGER = Logger.INSTANCE;
 
     /**
-     * Output directory location
+     * Valid values are: HOTSWAP, RELPROXY, NONE
+     */
+    @Parameter(property = "devMode", defaultValue = "HOTSWAP")
+    private DevMode devMode;
+
+    /**
+     * Work directory
      */
     @Parameter(property = "outputDirectory", defaultValue = "target/devmode")
     private File outputDirectory;
@@ -35,9 +41,6 @@ public class DevModeMojo extends AbstractMojo {
      */
     @Parameter(property = "mainClass", defaultValue = "io.descoped.container.Main")
     private String mainClass;
-
-    @Parameter(property = "devMode", defaultValue = "HOTSWAP")
-    private DevMode devMode;
 
     /**
      * The maven project instance
