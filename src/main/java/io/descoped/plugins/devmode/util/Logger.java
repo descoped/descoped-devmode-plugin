@@ -11,7 +11,7 @@ final public class Logger {
     public static Log INSTANCE = getLogger();
     private static Log LOGGER = null;
 
-    private synchronized static Log getLogger() {
+    private static Log getLogger() {
         if (LOGGER == null) {
             System.out.println("Create new SystemStreamLog instance");
             LOGGER = new SystemStreamLog();

@@ -3,10 +3,12 @@
 o--| Configuration    |--------------------------------------------------------o
 |  o------------------o
 |
+|--o  DevMode: @DEVMODE
 |--o  Project BasedDir: @BASEDIR
 |--o  Output directory: @OUTPUT_DIRECTORY
 |--o  Relative Output dir: @RELATIVE_OUTPUT_DIRECTORY
 |--o  Web Content directory: @WEB_CONTENT_DIRECTORY
+|--o  JavaVersion: @JAVA_VERSION
 |--o  JavaHome directory: @JAVA_HOME
 |--o  Main-Class: @MAIN_CLASS
 |

@@ -42,4 +42,12 @@ public class JavaVersion {
     public static boolean isJdk8() {
         return major.startsWith("1.8");
     }
+
+    public static CharSequence getVersionInfo() {
+        return String.format("%s-u%s_%s", (isJdk8() ? "8" : "7"), getMinor(), getBuild());
+    }
+
+    public static String getVendorVersion() {
+        return String.format("%s (%s) v%s", System.getProperty("java.vm.vendor"), System.getProperty("java.runtime.name"), getVersionInfo());
+    }
 }

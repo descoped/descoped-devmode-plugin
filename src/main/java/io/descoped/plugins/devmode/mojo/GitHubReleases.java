@@ -1,6 +1,7 @@
 package io.descoped.plugins.devmode.mojo;
 
 import com.github.kevinsawicki.http.HttpRequest;
+import io.descoped.plugins.devmode.util.CommonUtil;
 import io.descoped.plugins.devmode.util.JavaVersion;
 import io.descoped.plugins.devmode.util.Logger;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -58,8 +59,7 @@ public class GitHubReleases {
 
     // do a latest version check -DcheckLatestVersion
     public boolean isHotswapInstalled() {
-        String javaHome = System.getProperty("java.home") + "/lib/dcevm/libjvm.dylib";
-        File file = new File(javaHome);
+        File file = new File(CommonUtil.getJavaHotswapAgentLib());
         return file.exists();
     }
 
@@ -139,14 +139,18 @@ public class GitHubReleases {
     }
 
     public GitHubUrl findMatchingHotswapVersion(List<GitHubUrl> releases) {
-        String spec = String.format("light-jdk%su%s", (JavaVersion.isJdk8() ? "8" : "7"), JavaVersion.getMinor());
         List<GitHubUrl> options = new ArrayList<>();
         releases.forEach(url -> {
-            if (url.getTag().startsWith(spec)) {
+            if (isHotswapVersionMatchingJDK(url)) {
                 options.add(url);
             }
         });
         return (options.isEmpty() ? null : options.get(0));
+    }
+
+    public boolean isHotswapVersionMatchingJDK(GitHubUrl compareWith) {
+        String spec = String.format("light-jdk%su%s", (JavaVersion.isJdk8() ? "8" : "7"), JavaVersion.getMinor());
+        return compareWith.getTag().startsWith(spec);
     }
 
     public GitHubUrl findMatchingHotswapAgentVersion(List<GitHubUrl> urls) throws MojoExecutionException {

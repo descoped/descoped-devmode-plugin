@@ -2,6 +2,7 @@ package io.descoped.plugins.devmode.mojo;
 
 import io.descoped.plugins.devmode.util.CommonUtil;
 import io.descoped.plugins.devmode.util.FileUtils;
+import io.descoped.plugins.devmode.util.JavaVersion;
 import io.descoped.plugins.devmode.util.Logger;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -28,23 +29,28 @@ public class DevModeHelper {
     private final File outputDirectory;
     private final String webContent;
     private final String mainClass;
+    private final DevModeMojo mojo;
 
-    public DevModeHelper(MavenProject project, File outputDirectory, String webContent, String mainClass) {
-        this.project = project;
-        this.outputDirectory = outputDirectory;
-        this.webContent = webContent;
-        this.mainClass = mainClass;
+    public DevModeHelper(DevModeMojo devModeMojo) {
+        this.mojo = devModeMojo;
+        this.project = devModeMojo.getProject();
+        this.outputDirectory = devModeMojo.getOutputDirectory();
+        this.webContent = devModeMojo.getWebContent();
+        this.mainClass = devModeMojo.getMainClass();
     }
 
     public void init() throws MojoExecutionException {
+        if (!CommonUtil.checkIfJavaExists()) throw new MojoExecutionException("The environment variable JAVA_HOME must be set!");
         try {
             String txt = loadTemplate("mojo-config.txt");
-            txt = txt.replace("@BASEDIR", "\t"+project.getBasedir().getAbsolutePath());
-            txt = txt.replace("@OUTPUT_DIRECTORY", "\t"+outputDirectory.getAbsolutePath());
-            txt = txt.replace("@RELATIVE_OUTPUT_DIRECTORY", "\t"+relativeOutputDirectory());
-            txt = txt.replace("@WEB_CONTENT_DIRECTORY", "\t"+webContent);
-            txt = txt.replace("@JAVA_HOME", "\t"+System.getProperty("java.home"));
-            txt = txt.replace("@MAIN_CLASS", "\t\t"+mainClass);
+            txt = txt.replace("@DEVMODE", "\t\t\t" + mojo.getDevMode());
+            txt = txt.replace("@BASEDIR", "\t" + project.getBasedir().getAbsolutePath());
+            txt = txt.replace("@OUTPUT_DIRECTORY", "\t" + outputDirectory.getAbsolutePath());
+            txt = txt.replace("@RELATIVE_OUTPUT_DIRECTORY", "\t" + relativeOutputDirectory());
+            txt = txt.replace("@WEB_CONTENT_DIRECTORY", "\t" + webContent);
+            txt = txt.replace("@JAVA_VERSION", "\t\t" + JavaVersion.getVendorVersion());
+            txt = txt.replace("@JAVA_HOME", "\t" + CommonUtil.getJavaHome());
+            txt = txt.replace("@MAIN_CLASS", "\t\t" + mainClass);
             BufferedReader reader = new BufferedReader(new StringReader(CommonUtil.trimRight(txt)));
             String line;
             System.out.println();
@@ -57,8 +63,24 @@ public class DevModeHelper {
         }
     }
 
+    public MavenProject getProject() {
+        return project;
+    }
+
+    public File getOutputDirectory() {
+        return outputDirectory;
+    }
+
+    public String getWebContent() {
+        return webContent;
+    }
+
+    public String getMainClass() {
+        return mainClass;
+    }
+
     public String relativeOutputDirectory() {
-        return outputDirectory.getAbsolutePath().replace(FileUtils.currentPath()+"/", "");
+        return outputDirectory.getAbsolutePath().replace(FileUtils.currentPath() + "/", "");
     }
 
     public void validateOutputDirectory() throws MojoExecutionException {
@@ -70,6 +92,12 @@ public class DevModeHelper {
                 throw new MojoExecutionException("Unable to create directory: " + outputDirectory, e);
             }
 
+        }
+    }
+
+    public void validateMainClass() throws MojoExecutionException {
+        if (!findClass(mainClass)) {
+            throw new MojoExecutionException("Error locating class: " + mainClass + "\nClass-path: " + System.getProperty("java.class.path"));
         }
     }
 
@@ -151,12 +179,6 @@ public class DevModeHelper {
         }
     }
 
-    public String getJavaHomeExecutable() {
-        String separator = System.getProperty("file.separator");
-        String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
-        return path;
-    }
-
     public String loadTemplate(String resourceName) throws MojoExecutionException {
         try {
             ClassLoader cl = Thread.currentThread().getContextClassLoader();
@@ -181,17 +203,16 @@ public class DevModeHelper {
         processBuilder.directory(Paths.get(execDirectory).toFile());
         processBuilder.inheritIO();
 
-        LOGGER.info("Starting process in DevMode..");
+        LOGGER.debug("Starting process in DevMode..");
         Process process = processBuilder.start();
-        LOGGER.info("Process PID: " + CommonUtil.getPidOfProcess(process));
+        LOGGER.debug("Process PID: " + CommonUtil.getPidOfProcess(process));
         if (waitFor) {
             process.waitFor();
-            LOGGER.info("Process exited with code: " + process.exitValue());
+            LOGGER.debug("Process exited with code: " + process.exitValue());
         } else {
-            LOGGER.info("Leaving process in background. Bye!");
+            LOGGER.info("Exiting.. Bye!");
             System.exit(-1);
         }
     }
-
 
 }

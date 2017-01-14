@@ -65,8 +65,8 @@ public class GitHubReleasesTest {
 
     @Test
     public void testHotswapLatestRelease() throws Exception {
-        GitHubReleases installer = MockHelper.mockGitHubReleases();
-        GitHubUrl url = installer.getHotswapLatestReleaseVersion();
+        GitHubReleases releases = MockHelper.mockGitHubReleases();
+        GitHubUrl url = releases.getHotswapLatestReleaseVersion();
         assertNotNull(url.getTag());
         assertNotNull(url.getUrl());
         LOGGER.info("HotswapLatestRelease\t..tagName: " + url.getTag() + " \tbrowser_download_url: " + url.getUrl());
@@ -74,11 +74,11 @@ public class GitHubReleasesTest {
 
     @Test
     public void testHotswapReleases() throws Exception {
-        GitHubReleases installer = MockHelper.mockGitHubReleases();
-        GitHubUrl latestVersion = installer.getHotswapLatestReleaseVersion();
-        List<GitHubUrl> urls = installer.getHotswapReleaseList();
+        GitHubReleases releases = MockHelper.mockGitHubReleases();
+        GitHubUrl latestVersion = releases.getHotswapLatestReleaseVersion();
+        List<GitHubUrl> urls = releases.getHotswapReleaseList();
         if (!CommonUtil.isTravisCI()) assertEquals(5, urls.size());
-        GitHubUrl matchUrl = installer.findMatchingHotswapVersion(urls);
+        GitHubUrl matchUrl = releases.findMatchingHotswapVersion(urls);
         LOGGER.info("---o  + = latest-release");
         LOGGER.info("---o  * = best-match");
         urls.forEach(url -> {
@@ -92,8 +92,8 @@ public class GitHubReleasesTest {
 
     @Test
     public void testHotswapAgentLatestRelease() throws Exception {
-        GitHubReleases installer = MockHelper.mockGitHubReleases();
-        GitHubUrl url = installer.getHotswapAgentLatestReleaseVersion();
+        GitHubReleases releases = MockHelper.mockGitHubReleases();
+        GitHubUrl url = releases.getHotswapAgentLatestReleaseVersion();
         assertNotNull(url.getTag());
         assertNotNull(url.getUrl());
         LOGGER.info("HotswapAgentLatestRelease\t..tagName: " + url.getTag() + " \t\t\tbrowser_download_url: " + url.getUrl());
@@ -101,11 +101,11 @@ public class GitHubReleasesTest {
 
     @Test
     public void testHotswapAgentReleases() throws Exception {
-        GitHubReleases installer = MockHelper.mockGitHubReleases();
-        GitHubUrl latestVersion = installer.getHotswapAgentLatestReleaseVersion();
-        List<GitHubUrl> urls = installer.getHotswapAgentReleaseList();
+        GitHubReleases releases = MockHelper.mockGitHubReleases();
+        GitHubUrl latestVersion = releases.getHotswapAgentLatestReleaseVersion();
+        List<GitHubUrl> urls = releases.getHotswapAgentReleaseList();
         if (!CommonUtil.isTravisCI()) assertEquals(3, urls.size());
-        GitHubUrl matchUrl = installer.findMatchingHotswapAgentVersion(urls);
+        GitHubUrl matchUrl = releases.findMatchingHotswapAgentVersion(urls);
         urls.forEach(url -> {
             boolean latest = (url.equalTo(latestVersion));
             boolean match = (url.equalTo(matchUrl));

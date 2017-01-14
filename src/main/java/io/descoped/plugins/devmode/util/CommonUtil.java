@@ -24,12 +24,14 @@ public class CommonUtil {
     // http://patorjk.com/software/taag/#p=display&f=Graffiti&t=Descoped
     public static final String DESCOPED_LOGO = "\n" +
             "\t________                                               .___\n" +
-                    "\t\\______ \\   ____   ______ ____  ____ ______   ____   __| _/\n" +
-                    "\t |    |  \\_/ __ \\ /  ___// ___\\/  _ \\\\____ \\_/ __ \\ / __ | \n" +
-                    "\t |    `   \\  ___/ \\___ \\\\  \\__(  <_> )  |_> >  ___// /_/ | \n" +
-                    "\t/_______  /\\___  >____  >\\___  >____/|   __/ \\___  >____ | \n" +
-                    "\t        \\/     \\/     \\/     \\/      |__|        \\/     \\/ ";
+            "\t\\______ \\   ____   ______ ____  ____ ______   ____   __| _/\n" +
+            "\t |    |  \\_/ __ \\ /  ___// ___\\/  _ \\\\____ \\_/ __ \\ / __ | \n" +
+            "\t |    `   \\  ___/ \\___ \\\\  \\__(  <_> )  |_> >  ___// /_/ | \n" +
+            "\t/_______  /\\___  >____  >\\___  >____/|   __/ \\___  >____ | \n" +
+            "\t        \\/     \\/     \\/     \\/      |__|        \\/     \\/ ";
+
     private static final Log LOGGER = Logger.INSTANCE;
+
     private static ThreadLocal<OutputStream> outputLocal = new ThreadLocal<OutputStream>() {
         private OutputStream output = null;
 
@@ -162,11 +164,40 @@ public class CommonUtil {
 
     public static boolean isMojoRunningInTestingHarness() {
         try {
-            Class<?> mojo = Class.forName("org.apache.maven.plugin.testing.AbstractMojoTestCase");
+            Class.forName("org.apache.maven.plugin.testing.AbstractMojoTestCase");
             return true;
         } catch (ClassNotFoundException e) {
             return false;
         }
+    }
+
+    public static String getJavaHome() {
+        String home = System.getProperty("java.home");
+        return home;
+    }
+
+    public static String getJavaJdkHome() {
+        String home = getJavaHome();
+        // npe check here
+        home = home.replace("/jre", "");
+        return home;
+    }
+
+    public static String getJavaBin() {
+        String separator = System.getProperty("file.separator");
+        String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
+        return path;
+    }
+
+    public static boolean checkIfJavaExists() {
+        File javaHome = new File(getJavaHome());
+        File javaBin = new File(getJavaBin());
+        return javaHome.exists() && javaBin.exists();
+    }
+
+    // todo: add OS support
+    public static String getJavaHotswapAgentLib() {
+        return CommonUtil.getJavaHome() + "/lib/dcevm/libjvm.dylib";
     }
 
     public static boolean isMojoRunningStandalone(MavenProject project) {
@@ -235,6 +266,14 @@ public class CommonUtil {
         System.out.print(string);
     }
 
+    public static void interruptProgress(Thread progressThread) {
+        progressThread.interrupt();
+        try {
+            Thread.currentThread().sleep(50);
+        } catch (InterruptedException e) {
+        }
+    }
+
     private static class ConsoleProgress implements Runnable {
         private final File file;
         private final long contentLength;
@@ -260,11 +299,15 @@ public class CommonUtil {
         }
     }
 
-    public static void interruptProgress(Thread progressThread) {
-        progressThread.interrupt();
+    public static void resetSystemInScanner() {
         try {
-            Thread.currentThread().sleep(50);
-        } catch (InterruptedException e) {
+            int avail;
+            while((avail = System.in.available()) != 0) {
+                byte[] b = new byte[avail];
+                System.in.read(b, 0, avail);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
