@@ -22,12 +22,16 @@ import java.util.List;
  */
 public class DevModeHelper {
 
-    private static final Log LOGGER = Logger.INSTANCE;
+    private final Log LOGGER = Logger.INSTANCE;
 
     private final DevModeMojo mojo;
 
     public DevModeHelper(DevModeMojo devModeMojo) {
         this.mojo = devModeMojo;
+    }
+
+    public DevModeMojo getMojo() {
+        return mojo;
     }
 
     public void init() throws MojoExecutionException {
@@ -56,7 +60,7 @@ public class DevModeHelper {
     }
 
     public String relativeOutputDirectory() {
-        return mojo.getOutputDirectory().getAbsolutePath().replace(FileUtils.currentPath() + "/", "");
+        return mojo.getOutputDirectory().getAbsolutePath().replace(FileUtils.currentPath() + FileUtils.fileSeparator, "");
     }
 
     public void validateOutputDirectory() throws MojoExecutionException {

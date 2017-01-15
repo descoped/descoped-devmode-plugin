@@ -51,9 +51,10 @@ Configuration options:
 
 ### Maven environment variables
 
- Option        | Description                                     |
----------------|-------------------------------------------------|
- updateHotswap | Force install process for the DCEVM Hotswap JVM |
+ Option          | Description                                            |
+-----------------|--------------------------------------------------------|
+ updateHotswap   | Force install process for the DCEVM Hotswap JVM        |
+ useJarInstaller | Use DCEVM Jar Installer instead of plugin installation |
 
 Maven options are added as follows: `mvn -D<option>`
 

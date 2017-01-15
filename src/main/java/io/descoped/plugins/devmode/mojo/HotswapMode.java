@@ -14,6 +14,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import static java.lang.Boolean.TRUE;
 
@@ -22,7 +24,7 @@ import static java.lang.Boolean.TRUE;
  */
 public class HotswapMode {
 
-    private static final Log LOGGER = Logger.INSTANCE;
+    private final Log LOGGER = Logger.INSTANCE;
 
     private final DevModeHelper helper;
 
@@ -44,7 +46,7 @@ public class HotswapMode {
             return false;
         }
         if (gitHubReleases().isHotswapInstalled() && !isPropertyHotswapUpdateSet()) {
-            LOGGER.info("Hotswap is found at: " + CommonUtil.getJavaHotswapAgentLib());
+            LOGGER.info("Hotswap is found at: " + CommonUtil.getJavaJreHotswapLib());
             return false;
         }
         return true;
@@ -59,6 +61,10 @@ public class HotswapMode {
             System.out.println("  \\");
             while ((line = reader.readLine()) != null) {
                 if (line.trim().equals("")) continue;
+                if (!helper.getMojo().getUseJarInstaller() && line.contains("@USE_JAR_INSTALLER"))
+                    continue;
+                else
+                    line = line.replace("@USE_JAR_INSTALLER", "");
                 System.out.println(line);
             }
         } catch (IOException e) {
@@ -71,7 +77,7 @@ public class HotswapMode {
         GitHubUrl latestVersion = gitHubReleases().getHotswapLatestReleaseVersion();
         GitHubUrl defaultOptionUrl = gitHubReleases().findMatchingHotswapVersion(releaseList);
         int defaultOption = releaseList.indexOf(defaultOptionUrl);
-        int selectedOption = defaultOption;
+        int selectedOption = (defaultOption == -1 ? 0 : defaultOption);
 
         {
             LOGGER.info("Please select which version of DCEVM Hotswap you want to install:");
@@ -132,15 +138,87 @@ public class HotswapMode {
         throw new MojoExecutionException("Error when installing Hotswap. Http error code: " + req.code());
     }
 
+    public static final String WIN_AMD64 = "windows_amd64_compiler2/product/jvm.dll";
+    public static final String WIN_X86 = "windows_i486_compiler2/product/jvm.dll";
+    public static final String LINUX_AMD64 = "linux_amd64_compiler2/product/libjvm.so";
+    public static final String LINUX_X86 = "linux_i486_compiler2/product/libjvm.so";
+    public static final String BSD_AMD64 = "bsd_amd64_compiler2/product/libjvm.dylib";
+    public static final String JDK_TARGET = "lib/dcevm";
+
+    public static String getHotswapLibFilename() {
+        String lib = null;
+        if (CommonUtil.isMacOS() && CommonUtil.is64bit()) {
+            lib = HotswapMode.BSD_AMD64;
+        } else if (CommonUtil.isLinux() && CommonUtil.is64bit()) {
+            lib = HotswapMode.LINUX_AMD64;
+        } else if (CommonUtil.isLinux() && !CommonUtil.is64bit()) {
+            lib = HotswapMode.LINUX_X86;
+        } else if (CommonUtil.isWindows() && CommonUtil.is64bit()) {
+            lib = HotswapMode.WIN_AMD64;
+        } else if (CommonUtil.isWindows() && !CommonUtil.is64bit()) {
+            lib = HotswapMode.WIN_X86;
+        } else {
+            throw new RuntimeException("Unable to resolve JVM Library for your system!");
+        }
+        return lib;
+
+    }
+
+    public String unzipHotswapJarToTargetDir(String hotswapJarTempFile) throws MojoExecutionException {
+        String lib = getHotswapLibFilename();
+        String targetFilename = null;
+        try {
+            ZipInputStream zis = new ZipInputStream(new FileInputStream(hotswapJarTempFile));
+            try {
+                ZipEntry ze = zis.getNextEntry();
+                while (ze != null) {
+                    String zipFileNamePath = ze.getName();
+                    String zipFileName = Paths.get(zipFileNamePath).getFileName().toString();
+                    targetFilename = helper.relativeOutputDirectory() + FileUtils.fileSeparator + JDK_TARGET + FileUtils.fileSeparator + zipFileName;
+                    if (zipFileNamePath.equals(lib)) {
+                        File targetFile = new File(targetFilename);
+                        Path targetPath = Paths.get(targetFile.getAbsolutePath()).getParent();
+                        FileUtils.createDirectories(targetPath);
+                        FileOutputStream fos = new FileOutputStream(targetFile);
+                        try {
+                            byte[] buffer = new byte[1024];
+                            int len;
+                            while ((len = zis.read(buffer)) > 0) {
+                                fos.write(buffer, 0, len);
+                            }
+                        } finally {
+                            fos.close();
+                        }
+                        break;
+                    }
+                    ze = zis.getNextEntry();
+                }
+            } finally {
+                zis.closeEntry();
+                zis.close();
+            }
+        } catch (IOException e) {
+            throw new MojoExecutionException("Something went wrong during unzip of " + targetFilename, e);
+        }
+        return targetFilename;
+    }
+
     private void createHotswapBatchInstallScript(String installationFile) throws IOException {
         StringBuffer bash = new StringBuffer();
         {
             bash.append("#!/bin/sh\n\n");
-            bash.append("cd ").append(CommonUtil.getJavaJdkHome()).append("\n");
-            bash.append("sudo -p ").append("\"Enter password to start Hotswap Installer:\"").append(" bash -c ").append("'");
-            bash.append(CommonUtil.getJavaBin()).append(" ");
-            bash.append("-jar ");
-            bash.append(installationFile).append("'\n");
+            if (helper.getMojo().getUseJarInstaller()) {
+                bash.append("cd ").append(CommonUtil.getJavaJdkHome()).append("\n");
+                bash.append("sudo -p ").append("\"Enter password to start Hotswap Installer:\"").append(" bash -c ").append("'");
+                bash.append(CommonUtil.getJavaBin()).append(" ");
+                bash.append("-jar ");
+                bash.append(installationFile).append("'\n");
+            } else {
+                Path installFilePath = Paths.get(CommonUtil.getJavaJreHotswapLib()).toAbsolutePath();
+                Path installPath = Paths.get(CommonUtil.getJavaJreHotswapLib()).getParent().toAbsolutePath();
+                bash.append("sudo -p ").append("\"Enter password to start Hotswap Installer:\"").append(" mkdir -p ").append(installPath.toString()).append("\n");
+                bash.append("sudo cp -f ").append(installationFile).append(" ").append(installFilePath.toString()).append("\n");
+            }
         }
         {
             File bashFile = new File(String.format("%s/%s/installJvmHotswap.sh", FileUtils.currentPath(), helper.relativeOutputDirectory()));

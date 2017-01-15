@@ -7,7 +7,7 @@ o--| IMPORTANT NOTICE |--------------------------------------------------------o
 o------------------------------------------------------------------------------o
 |
 |--o  This script will install the DCEVM Hotswap as an AltJVM
-|--o  You will be presented a dialog where you select the 'jre' directory and choose 'Install as AltJVM'
+|--o  You will be presented a dialog where you select the 'jre' directory and choose 'Install as AltJVM' @USE_JAR_INSTALLER
 |--o  When you have installed the JVM extension, you may reissue your maven command to run in devmode
 |--o  This script requires sudo rights in order to alter your JDK@JDK_VERSION
 |--o  Please refer to the DCEVM documentation at https://github.com/dcevm/dcevm/blob/master/README.md

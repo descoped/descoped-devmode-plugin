@@ -6,7 +6,7 @@ import org.apache.maven.plugin.logging.SystemStreamLog;
 /**
  * Created by oranheim on 07/01/2017.
  */
-final public class Logger {
+public class Logger {
 
     public static Log INSTANCE = getLogger();
     private static Log LOGGER = null;

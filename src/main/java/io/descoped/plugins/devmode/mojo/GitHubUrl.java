@@ -8,7 +8,7 @@ import java.net.URLDecoder;
  */
 public class GitHubUrl {
 
-    private  final String tag;
+    private final String tag;
     private final String url;
 
     public GitHubUrl(String tag, String url) {

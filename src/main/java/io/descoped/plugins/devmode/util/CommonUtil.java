@@ -1,5 +1,6 @@
 package io.descoped.plugins.devmode.util;
 
+import io.descoped.plugins.devmode.mojo.HotswapMode;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 
@@ -8,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -29,8 +31,6 @@ public class CommonUtil {
             "\t |    `   \\  ___/ \\___ \\\\  \\__(  <_> )  |_> >  ___// /_/ | \n" +
             "\t/_______  /\\___  >____  >\\___  >____/|   __/ \\___  >____ | \n" +
             "\t        \\/     \\/     \\/     \\/      |__|        \\/     \\/ ";
-
-    private static final Log LOGGER = Logger.INSTANCE;
 
     private static ThreadLocal<OutputStream> outputLocal = new ThreadLocal<OutputStream>() {
         private OutputStream output = null;
@@ -124,18 +124,18 @@ public class CommonUtil {
     }
 
     public static void printEnvVars() {
-        LOGGER.info("------------> Environment Varaibles <------------");
+        Logger.INSTANCE.info("------------> Environment Varaibles <------------");
         Map<String, String> env = System.getenv();
         for (Map.Entry<String, String> e : env.entrySet()) {
             if (e.getKey().contains("CI_NEXUS")) continue;
-            LOGGER.info(String.format("%s=%s", e.getKey(), e.getValue()));
+            Logger.INSTANCE.info(String.format("%s=%s", e.getKey(), e.getValue()));
         }
-        LOGGER.info("------------> System Properties <------------");
+        Logger.INSTANCE.info("------------> System Properties <------------");
         Properties props = System.getProperties();
         for (Map.Entry<Object, Object> e : props.entrySet()) {
-            LOGGER.info(String.format("%s=%s", e.getKey(), e.getValue()));
+            Logger.INSTANCE.info(String.format("%s=%s", e.getKey(), e.getValue()));
         }
-        LOGGER.info("------------> -o-o-o-o-o-o-o <------------");
+        Logger.INSTANCE.info("------------> -o-o-o-o-o-o-o <------------");
     }
 
     public static String trimLeft(String string) {
@@ -162,6 +162,10 @@ public class CommonUtil {
         return getOSString().contains("Windows");
     }
 
+    public static boolean is64bit() {
+        return System.getProperty("os.arch").indexOf("64") != -1;
+    }
+
     public static boolean isMojoRunningInTestingHarness() {
         try {
             Class.forName("org.apache.maven.plugin.testing.AbstractMojoTestCase");
@@ -184,8 +188,7 @@ public class CommonUtil {
     }
 
     public static String getJavaBin() {
-        String separator = System.getProperty("file.separator");
-        String path = System.getProperty("java.home") + separator + "bin" + separator + "java";
+        String path = System.getProperty("java.home") + FileUtils.fileSeparator + "bin" + FileUtils.fileSeparator + "java";
         return path;
     }
 
@@ -195,9 +198,15 @@ public class CommonUtil {
         return javaHome.exists() && javaBin.exists();
     }
 
-    // todo: add OS support
-    public static String getJavaHotswapAgentLib() {
-        return CommonUtil.getJavaHome() + "/lib/dcevm/libjvm.dylib";
+    public static String getJavaHotswapLibFilename() {
+        String lib = HotswapMode.getHotswapLibFilename();
+        return Paths.get(lib).getFileName().toString();
+    }
+
+    public static String getJavaJreHotswapLib() {
+        return CommonUtil.getJavaHome() + FileUtils.fileSeparator + "lib" +
+                FileUtils.fileSeparator + "dcevm" + FileUtils.fileSeparator +
+                getJavaHotswapLibFilename();
     }
 
     public static boolean isMojoRunningStandalone(MavenProject project) {

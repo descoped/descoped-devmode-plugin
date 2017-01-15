@@ -16,8 +16,6 @@ package io.descoped.plugins.devmode.util;
  * limitations under the License.
  */
 
-import org.apache.maven.plugin.logging.Log;
-
 import java.io.*;
 import java.nio.channels.FileLock;
 import java.nio.charset.Charset;
@@ -35,10 +33,9 @@ import java.util.Set;
  */
 public class FileUtils {
 
-    private static final Log LOGGER = Logger.INSTANCE;
-
     /* added by Ove Ranheim */
-    private static Path currentPath;
+
+    public static String fileSeparator = System.getProperty("file.separator");
 
     public static Path getCurrentPath() {
         return Paths.get("").toAbsolutePath();
@@ -52,9 +49,9 @@ public class FileUtils {
         if (!Files.isDirectory(directory)) {
             Path dir;
             if ((dir = Files.createDirectories(directory)) != null) {
-                LOGGER.debug(String.format("Created directory: %s", dir.toString()));
+                Logger.INSTANCE.debug(String.format("Created directory: %s", dir.toString()));
             } else {
-                LOGGER.debug(String.format("Unable to create directory: %s", dir.toString()));
+                Logger.INSTANCE.debug(String.format("Unable to create directory: %s", dir.toString()));
             }
         }
     }
@@ -98,7 +95,7 @@ public class FileUtils {
             }
         } finally {
             out.close();
-            LOGGER.info(String.format("Wrote new file: %s", file.toString()));
+            Logger.INSTANCE.info(String.format("Wrote new file: %s", file.toString()));
         }
     }
 
@@ -119,7 +116,7 @@ public class FileUtils {
             }
         } finally {
             raf.close();
-            LOGGER.info(String.format("Removed file: %s", file.toString()));
+            Logger.INSTANCE.info(String.format("Removed file: %s", file.toString()));
         }
     }
 

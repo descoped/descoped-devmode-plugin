@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
  */
 public class GitHubReleasesTest {
 
-    private static final Log LOGGER = Logger.INSTANCE;
+    private static Log LOGGER = Logger.INSTANCE;
     private static String JDK_VERSION = String.format("%s-u%s_%s", (JavaVersion.isJdk8() ? "8" : "7"), JavaVersion.getMinor(), JavaVersion.getBuild());
 
     private String loadTemplate(String resourceName) throws IOException {

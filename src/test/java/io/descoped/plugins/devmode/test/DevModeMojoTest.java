@@ -15,7 +15,7 @@ import java.util.Map;
  */
 public class DevModeMojoTest extends AbstractMojoTestCase {
 
-    private static final Log LOGGER = Logger.INSTANCE;
+    private final Log LOGGER = Logger.INSTANCE;
 
     @Override
     protected void setUp() throws Exception {

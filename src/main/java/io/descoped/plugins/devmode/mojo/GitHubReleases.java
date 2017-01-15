@@ -19,7 +19,7 @@ import java.util.List;
  */
 public class GitHubReleases {
 
-    private static final Log LOGGER = Logger.INSTANCE;
+    private final Log LOGGER = Logger.INSTANCE;
     private static final String HOTSWAP_LATEST_RELEASE = "https://api.github.com/repos/dcevm/dcevm/releases/latest";
     private static final String HOTSWAP_RELEASES = "https://api.github.com/repos/dcevm/dcevm/releases";
     private static final String HOTSWAP_AGENT_LATEST_RELEASE = "https://api.github.com/repos/HotswapProjects/HotswapAgent/releases/latest";
@@ -59,7 +59,7 @@ public class GitHubReleases {
 
     // do a latest version check -DcheckLatestVersion
     public boolean isHotswapInstalled() {
-        File file = new File(CommonUtil.getJavaHotswapAgentLib());
+        File file = new File(CommonUtil.getJavaJreHotswapLib());
         return file.exists();
     }
 

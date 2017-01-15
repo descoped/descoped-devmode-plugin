@@ -1,10 +1,10 @@
 package io.descoped.plugins.devmode.mojo;
 
 import io.descoped.plugins.devmode.util.CommonUtil;
+import io.descoped.plugins.devmode.util.FileUtils;
 import io.descoped.plugins.devmode.util.Logger;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
 
@@ -15,8 +15,6 @@ import java.io.File;
  */
 @Mojo(name = "run", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
 public class DevModeMojo extends AbstractMojo {
-
-    private static Log LOGGER = Logger.INSTANCE;
 
     /**
      * Valid values are: HOTSWAP, RELPROXY, NONE
@@ -53,8 +51,17 @@ public class DevModeMojo extends AbstractMojo {
 
     public DevModeMojo() {
         super();
-        Logger.setLogger(getLog());
         getLog().info(CommonUtil.DESCOPED_LOGO);
+    }
+
+    public DevMode getDevMode() {
+        return devMode;
+    }
+
+     // Execute DCEVM Installer instead of DevMode unpacking method
+    public Boolean getUseJarInstaller() {
+        String useJarInstaller = System.getProperty("useJarInstaller");
+        return  (useJarInstaller != null && "true".equals(useJarInstaller));
     }
 
     public File getOutputDirectory() {
@@ -67,10 +74,6 @@ public class DevModeMojo extends AbstractMojo {
 
     public String getMainClass() {
         return mainClass;
-    }
-
-    public DevMode getDevMode() {
-        return devMode;
     }
 
     public MavenProject getProject() {
@@ -91,7 +94,12 @@ public class DevModeMojo extends AbstractMojo {
             String installationFile = hotswapMode.downloadHotswap(hotswapOption);
 
             if (installationFile != null) {
-                hotswapMode.installHotswap(installationFile);
+                if (getUseJarInstaller()) {
+                    hotswapMode.installHotswap(installationFile);
+                } else {
+                    String tmpFile = FileUtils.currentPath().toString() + FileUtils.fileSeparator + hotswapMode.unzipHotswapJarToTargetDir(installationFile);
+                    hotswapMode.installHotswap(tmpFile);
+                }
             }
         }
 
@@ -107,6 +115,7 @@ public class DevModeMojo extends AbstractMojo {
     }
 
     public void execute() throws MojoExecutionException {
+        Logger.setLogger(getLog());
         helper = new DevModeHelper(this);
         helper.init();
         helper.validateOutputDirectory();
