@@ -21,8 +21,8 @@ public class DevModeMojo extends AbstractMojo {
     /**
      * Valid values are: HOTSWAP, RELPROXY, NONE
      */
-    @Parameter(property = "devMode", defaultValue = "HOTSWAP")
-    private DevMode devMode;
+//    Parameter(property = "devMode", defaultValue = "HOTSWAP")
+    private DevMode devMode = DevMode.HOTSWAP;
 
     /**
      * Work directory
@@ -33,7 +33,7 @@ public class DevModeMojo extends AbstractMojo {
     /**
      * Web content location in src
      */
-    @Parameter(property = "webContent", defaultValue = "src/main/resources/")
+    @Parameter(property = "webContent", required = false, defaultValue = "")
     private String webContent;
 
     /**

@@ -44,7 +44,6 @@ Configuration options:
 
  Option          | Default                    | Description                                     |
 -----------------|----------------------------|-------------------------------------------------|
- devMode         | HOTSWAP                    | Valid values are: HOTSWAP, RELPROXY, NONE       |
  outputDirectory | target/devmode             | Work directory                                  |
  webContent      | src/main/resources         | Web resources directory                         |
  mainClass       | io.descoped.container.Main | Main class to be executed                       |

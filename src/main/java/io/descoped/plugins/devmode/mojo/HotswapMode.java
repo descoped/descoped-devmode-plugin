@@ -7,7 +7,6 @@ import io.descoped.plugins.devmode.util.JavaVersion;
 import io.descoped.plugins.devmode.util.Logger;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.project.MavenProject;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -25,18 +24,10 @@ public class HotswapMode {
 
     private static final Log LOGGER = Logger.INSTANCE;
 
-    private final MavenProject project;
-    private final File outputDirectory;
-    private final String webContent;
-    private final String mainClass;
     private final DevModeHelper helper;
 
     public HotswapMode(DevModeHelper helper) {
         this.helper = helper;
-        this.project = helper.getProject();
-        this.outputDirectory = helper.getOutputDirectory();
-        this.webContent = helper.getWebContent();
-        this.mainClass = helper.getMainClass();
     }
 
     private GitHubReleases gitHubReleases() {

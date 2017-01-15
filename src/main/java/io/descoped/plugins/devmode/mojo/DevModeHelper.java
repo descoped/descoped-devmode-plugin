@@ -7,7 +7,6 @@ import io.descoped.plugins.devmode.util.Logger;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.project.MavenProject;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -25,32 +24,25 @@ public class DevModeHelper {
 
     private static final Log LOGGER = Logger.INSTANCE;
 
-    private final MavenProject project;
-    private final File outputDirectory;
-    private final String webContent;
-    private final String mainClass;
     private final DevModeMojo mojo;
 
     public DevModeHelper(DevModeMojo devModeMojo) {
         this.mojo = devModeMojo;
-        this.project = devModeMojo.getProject();
-        this.outputDirectory = devModeMojo.getOutputDirectory();
-        this.webContent = devModeMojo.getWebContent();
-        this.mainClass = devModeMojo.getMainClass();
     }
 
     public void init() throws MojoExecutionException {
-        if (!CommonUtil.checkIfJavaExists()) throw new MojoExecutionException("The environment variable JAVA_HOME must be set!");
+        if (!CommonUtil.checkIfJavaExists())
+            throw new MojoExecutionException("The environment variable JAVA_HOME must be set!");
         try {
             String txt = loadTemplate("mojo-config.txt");
-            txt = txt.replace("@DEVMODE", "\t\t\t" + mojo.getDevMode());
-            txt = txt.replace("@BASEDIR", "\t" + project.getBasedir().getAbsolutePath());
-            txt = txt.replace("@OUTPUT_DIRECTORY", "\t" + outputDirectory.getAbsolutePath());
+            //txt = txt.replace("@DEVMODE", "\t\t\t" + mojo.getDevMode());
+            txt = txt.replace("@BASEDIR", "\t" + mojo.getProject().getBasedir().getAbsolutePath());
+            txt = txt.replace("@OUTPUT_DIRECTORY", "\t" + mojo.getOutputDirectory().getAbsolutePath());
             txt = txt.replace("@RELATIVE_OUTPUT_DIRECTORY", "\t" + relativeOutputDirectory());
-            txt = txt.replace("@WEB_CONTENT_DIRECTORY", "\t" + webContent);
+            txt = txt.replace("@WEB_CONTENT_DIRECTORY", "\t" + (CommonUtil.isNotNull(mojo.getWebContent()) ? mojo.getWebContent() : "(empty)"));
             txt = txt.replace("@JAVA_VERSION", "\t\t" + JavaVersion.getVendorVersion());
             txt = txt.replace("@JAVA_HOME", "\t" + CommonUtil.getJavaHome());
-            txt = txt.replace("@MAIN_CLASS", "\t\t" + mainClass);
+            txt = txt.replace("@MAIN_CLASS", "\t\t" + mojo.getMainClass());
             BufferedReader reader = new BufferedReader(new StringReader(CommonUtil.trimRight(txt)));
             String line;
             System.out.println();
@@ -63,41 +55,25 @@ public class DevModeHelper {
         }
     }
 
-    public MavenProject getProject() {
-        return project;
-    }
-
-    public File getOutputDirectory() {
-        return outputDirectory;
-    }
-
-    public String getWebContent() {
-        return webContent;
-    }
-
-    public String getMainClass() {
-        return mainClass;
-    }
-
     public String relativeOutputDirectory() {
-        return outputDirectory.getAbsolutePath().replace(FileUtils.currentPath() + "/", "");
+        return mojo.getOutputDirectory().getAbsolutePath().replace(FileUtils.currentPath() + "/", "");
     }
 
     public void validateOutputDirectory() throws MojoExecutionException {
-        if (!outputDirectory.exists()) {
-            Path outputPath = Paths.get(outputDirectory.getAbsolutePath());
+        if (!mojo.getOutputDirectory().exists()) {
+            Path outputPath = Paths.get(mojo.getOutputDirectory().getAbsolutePath());
             try {
                 FileUtils.createDirectories(outputPath);
             } catch (IOException e) {
-                throw new MojoExecutionException("Unable to create directory: " + outputDirectory, e);
+                throw new MojoExecutionException("Unable to create directory: " + mojo.getOutputDirectory(), e);
             }
 
         }
     }
 
     public void validateMainClass() throws MojoExecutionException {
-        if (!findClass(mainClass)) {
-            throw new MojoExecutionException("Error locating class: " + mainClass + "\nClass-path: " + System.getProperty("java.class.path"));
+        if (!findClass(mojo.getMainClass())) {
+            throw new MojoExecutionException("Error locating class: " + mojo.getMainClass() + "\nClass-path: " + System.getProperty("java.class.path"));
         }
     }
 
@@ -106,13 +82,15 @@ public class DevModeHelper {
             StringBuffer path = new StringBuffer();
 
             String currentPath = FileUtils.currentPath();
-            path.append(currentPath).append("/").append(webContent).append(":");
+            if (CommonUtil.isNotNull(mojo.getWebContent())) {
+                path.append(currentPath).append("/").append(mojo.getWebContent()).append(":");
+            }
             path.append(currentPath).append("/").append("target/classes").append(":");
-            if (CommonUtil.isMojoRunningInTestingHarness() || CommonUtil.isMojoRunningStandalone(project)) {
+            if (CommonUtil.isMojoRunningInTestingHarness() || CommonUtil.isMojoRunningStandalone(mojo.getProject())) {
                 path.append(currentPath).append("/").append("target/test-classes").append(":");
             }
 
-            List<String> classpathElements = project.getRuntimeClasspathElements();
+            List<String> classpathElements = mojo.getProject().getRuntimeClasspathElements();
             if (classpathElements != null) {
                 for (String e : classpathElements) {
                     if (e.endsWith(".jar")) {
@@ -131,10 +109,10 @@ public class DevModeHelper {
 
     public boolean findClass(String className) throws MojoExecutionException {
         try {
-            List<String> classpathElements = project.getRuntimeClasspathElements();
+            List<String> classpathElements = mojo.getProject().getRuntimeClasspathElements();
 
             // only for mojo testing
-            if (CommonUtil.isMojoRunningInTestingHarness() || CommonUtil.isMojoRunningStandalone(project)) {
+            if (CommonUtil.isMojoRunningInTestingHarness() || CommonUtil.isMojoRunningStandalone(mojo.getProject())) {
                 if (classpathElements == null) {
                     classpathElements = new ArrayList<>();
                     classpathElements.add(0, FileUtils.currentPath() + "/target/classes");

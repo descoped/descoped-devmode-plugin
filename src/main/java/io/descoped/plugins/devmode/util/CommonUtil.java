@@ -274,6 +274,10 @@ public class CommonUtil {
         }
     }
 
+    public static boolean isNotNull(String string) {
+        return (string != null && !"".equals(string));
+    }
+
     private static class ConsoleProgress implements Runnable {
         private final File file;
         private final long contentLength;
