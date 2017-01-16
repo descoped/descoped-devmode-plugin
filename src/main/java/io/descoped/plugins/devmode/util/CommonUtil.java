@@ -176,26 +176,32 @@ public class CommonUtil {
     }
 
     public static String getJavaHome() {
-        String home = System.getProperty("java.home");
+        String home = System.getenv().get("JAVA_HOME");
+        if (CommonUtil.isEmpty(home)) {
+            home = System.getProperty("java.home");
+            if (home.contains(FileUtils.fileSeparator + "jre")) {
+                home = home.replace(FileUtils.fileSeparator + "jre", "");
+            } else {
+                throw new RuntimeException("Unable to resolve JAVA_HOME!");
+            }
+        }
         return home;
     }
 
-    public static String getJavaJdkHome() {
-        String home = getJavaHome();
-        // npe check here
-        home = home.replace("/jre", "");
-        return home;
+    public static String getJavaJreHome() {
+        return getJavaHome() + FileUtils.fileSeparator + "jre";
     }
 
     public static String getJavaBin() {
-        String path = System.getProperty("java.home") + FileUtils.fileSeparator + "bin" + FileUtils.fileSeparator + "java";
+        String path = getJavaJreHome() + FileUtils.fileSeparator + "bin" + FileUtils.fileSeparator + "java";
         return path;
     }
 
     public static boolean checkIfJavaExists() {
         File javaHome = new File(getJavaHome());
+        File javaJreHome = new File(getJavaJreHome());
         File javaBin = new File(getJavaBin());
-        return javaHome.exists() && javaBin.exists();
+        return javaHome.exists() && javaJreHome.exists() && javaBin.exists();
     }
 
     public static String getJavaHotswapLibFilename() {
@@ -204,7 +210,7 @@ public class CommonUtil {
     }
 
     public static String getJavaJreHotswapLib() {
-        return CommonUtil.getJavaHome() + FileUtils.fileSeparator + "lib" +
+        return CommonUtil.getJavaJreHome() + FileUtils.fileSeparator + "lib" +
                 FileUtils.fileSeparator + "dcevm" + FileUtils.fileSeparator +
                 getJavaHotswapLibFilename();
     }
@@ -281,6 +287,10 @@ public class CommonUtil {
             Thread.currentThread().sleep(50);
         } catch (InterruptedException e) {
         }
+    }
+
+    public static boolean isEmpty(String string) {
+        return (string == null || "".equals(string));
     }
 
     public static boolean isNotNull(String string) {

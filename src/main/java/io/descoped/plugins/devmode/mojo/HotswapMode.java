@@ -208,7 +208,7 @@ public class HotswapMode {
         {
             bash.append("#!/bin/sh\n\n");
             if (helper.getMojo().getUseJarInstaller()) {
-                bash.append("cd ").append(CommonUtil.getJavaJdkHome()).append("\n");
+                bash.append("cd ").append(CommonUtil.getJavaHome()).append("\n");
                 bash.append("sudo -p ").append("\"Enter password to start Hotswap Installer:\"").append(" bash -c ").append("'");
                 bash.append(CommonUtil.getJavaBin()).append(" ");
                 bash.append("-jar ");
