@@ -45,7 +45,7 @@ Configuration options:
  Option          | Default                    | Description                                     |
 -----------------|----------------------------|-------------------------------------------------|
  outputDirectory | target/devmode             | Work directory                                  |
- webContent      | src/main/resources         | Web resources directory                         |
+ webContent      | N/A                        | Custom Web resources directory                  |
  mainClass       | io.descoped.container.Main | Main class to be executed                       |
 
 
@@ -64,6 +64,9 @@ Maven options are added as follows: `mvn -D<option>`
 Run in Devmode:
 
 `mvn clean compile -Pdev -DskipTests`
+
+### Set up Idea
+
 
 ## Plugin developer notes
 
@@ -92,3 +95,10 @@ To run the plugin in context of plugin source code:
 * [DCEVM Hotswap Project](https://github.com/dcevm/dcevm)
 * [DCEVM Orginial Project](http://ssw.jku.at/dcevm/)
 * [DCEVM Hotswap Agent Project](https://github.com/HotswapProjects/HotswapAgent)
+
+
+## Todo
+
+* Add addJavaArgument
+* Add addClassPathElement
+* Add an envvar 'descoped.hotswap=true' that can be used to identify if container is running in DCEVM mode
