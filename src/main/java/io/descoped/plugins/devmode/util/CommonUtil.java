@@ -178,11 +178,21 @@ public class CommonUtil {
     public static String getJavaHome() {
         String home = System.getenv().get("JAVA_HOME");
         if (CommonUtil.isEmpty(home)) {
-            home = System.getProperty("java.home");
-            if (home.contains(FileUtils.fileSeparator + "jre")) {
-                home = home.replace(FileUtils.fileSeparator + "jre", "");
+            String jreHome = System.getProperty("java.home");
+            if (jreHome.contains(FileUtils.fileSeparator + "jre")) {
+                home = jreHome.replace(FileUtils.fileSeparator + "jre", "");
             } else {
                 throw new RuntimeException("Unable to resolve JAVA_HOME!");
+            }
+        } else {
+            String jreHome = System.getProperty("java.home");
+            try {
+                home = Paths.get(home).toRealPath().toString();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            if (isNotNull(jreHome) && !jreHome.contains(home)) {
+                throw new RuntimeException("\n\tJAVA_HOME: " + home + " and \n\tjre.home: " + jreHome + " is NOT the same!");
             }
         }
         return home;
@@ -210,9 +220,11 @@ public class CommonUtil {
     }
 
     public static String getJavaJreHotswapLib() {
-        return CommonUtil.getJavaJreHome() + FileUtils.fileSeparator + "lib" +
+        String lib = CommonUtil.getJavaJreHome() + FileUtils.fileSeparator + "lib" +
                 FileUtils.fileSeparator + "dcevm" + FileUtils.fileSeparator +
                 getJavaHotswapLibFilename();
+        Logger.INSTANCE.info("-----> getJavaJreHotswapLib(): " + lib);
+        return lib;
     }
 
     public static boolean isMojoRunningStandalone(MavenProject project) {
@@ -325,7 +337,7 @@ public class CommonUtil {
     public static void resetSystemInScanner() {
         try {
             int avail;
-            while((avail = System.in.available()) != 0) {
+            while ((avail = System.in.available()) != 0) {
                 byte[] b = new byte[avail];
                 System.in.read(b, 0, avail);
             }
