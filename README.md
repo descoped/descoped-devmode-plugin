@@ -55,6 +55,7 @@ Configuration options:
 -----------------|--------------------------------------------------------|
  updateHotswap   | Force install process for the DCEVM Hotswap JVM        |
  useJarInstaller | Use DCEVM Jar Installer instead of plugin installation |
+ addTestClasses  | Add `target/test-classes` to class path                |
 
 Maven options are added as follows: `mvn -D<option>`
 

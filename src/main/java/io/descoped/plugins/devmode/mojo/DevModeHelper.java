@@ -81,6 +81,11 @@ public class DevModeHelper {
         }
     }
 
+    private boolean isAddTestClasses() {
+        String addTestClasses = System.getProperty("addTestClasses");
+        return  (addTestClasses != null && "true".equals(addTestClasses));
+    }
+
     public String getCompilePlusRuntimeClasspathJars() throws MojoExecutionException {
         try {
             StringBuffer path = new StringBuffer();
@@ -90,7 +95,7 @@ public class DevModeHelper {
                 path.append(currentPath).append("/").append(mojo.getWebContent()).append(":");
             }
             path.append(currentPath).append("/").append("target/classes").append(":");
-            if (CommonUtil.isMojoRunningInTestingHarness() || CommonUtil.isMojoRunningStandalone(mojo.getProject())) {
+            if (CommonUtil.isMojoRunningInTestingHarness() || CommonUtil.isMojoRunningStandalone(mojo.getProject()) || isAddTestClasses()) {
                 path.append(currentPath).append("/").append("target/test-classes").append(":");
             }
 
