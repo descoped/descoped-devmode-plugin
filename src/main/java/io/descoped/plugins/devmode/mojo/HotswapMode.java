@@ -308,6 +308,7 @@ public class HotswapMode {
             args.add("-classpath");
             args.add(helper.getCompilePlusRuntimeClasspathJars());
             args.add(clazz);
+            args.add("-Dorg.apache.deltaspike.ProjectStage=Development");
 
             helper.exec(FileUtils.currentPath(), args, false, true, true);
         } catch (IOException | InterruptedException e) {
