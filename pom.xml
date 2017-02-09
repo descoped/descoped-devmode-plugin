@@ -1,18 +1,20 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>io.descoped.mojo</groupId>
-    <artifactId>web-devmode-plugin</artifactId>
-    <packaging>maven-plugin</packaging>
-    <version>1.0.0-alpha3-SNAPSHOT</version>
-    <name>Descoped Development Mojo</name>
-    <url>http://maven.apache.org</url>
 
     <parent>
         <groupId>io.descoped</groupId>
         <artifactId>parent</artifactId>
-        <version>3-SNAPSHOT</version>
+        <version>3</version>
     </parent>
+
+    <groupId>io.descoped.mojo</groupId>
+    <artifactId>web-devmode-plugin</artifactId>
+    <version>1.0.0-alpha3-SNAPSHOT</version>
+    <packaging>maven-plugin</packaging>
+
+    <name>Descoped Development Mojo</name>
+    <url>http://maven.apache.org</url>
 
     <developers>
         <developer>
@@ -31,16 +33,20 @@
         <connection>scm:git:git://github.com/descoped/descoped-devmode-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:descoped/descoped-devmode-plugin.git</developerConnection>
         <url>http://www.descoped.io</url>
-      <tag>HEAD</tag>
-  </scm>
+        <tag>HEAD</tag>
+    </scm>
 
     <properties>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.javadoc.skip>true</maven.javadoc.skip>
+
         <maven.version>3.3.9</maven.version>
         <maven.plugin.annotations>3.5</maven.plugin.annotations>
         <maven.plugin.testing.harness>3.3.0</maven.plugin.testing.harness>
+
+        <kevinsawicki.version>6.0</kevinsawicki.version>
+        <org.json.version>20160810</org.json.version>
         <junit.version>4.12</junit.version>
     </properties>
 
@@ -106,11 +112,13 @@
         <dependency>
             <groupId>com.github.kevinsawicki</groupId>
             <artifactId>http-request</artifactId>
+            <version>${kevinsawicki.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
+            <version>${org.json.version}</version>
         </dependency>
 
         <dependency>
