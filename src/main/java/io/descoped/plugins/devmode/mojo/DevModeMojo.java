@@ -13,7 +13,7 @@ import java.io.File;
 /**
  * Descoped Web Developer Plugin enables real time editing of source file when working on your project sources.
  */
-@Mojo(name = "run", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
+@Mojo(name = "run", defaultPhase = LifecyclePhase.PROCESS_CLASSES, requiresDependencyResolution = ResolutionScope.TEST)
 public class DevModeMojo extends AbstractMojo {
 
     /**

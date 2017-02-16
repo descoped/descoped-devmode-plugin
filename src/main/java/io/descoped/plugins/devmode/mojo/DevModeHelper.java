@@ -86,7 +86,7 @@ public class DevModeHelper {
         return  (addTestClasses != null && "true".equals(addTestClasses));
     }
 
-    public String getCompilePlusRuntimeClasspathJars() throws MojoExecutionException {
+    public String getProjectClasspathJars() throws MojoExecutionException {
         try {
             StringBuffer path = new StringBuffer();
 
@@ -99,7 +99,7 @@ public class DevModeHelper {
                 path.append(currentPath).append("/").append("target/test-classes").append(":");
             }
 
-            List<String> classpathElements = mojo.getProject().getRuntimeClasspathElements();
+            List<String> classpathElements = (isAddTestClasses() ? mojo.getProject().getTestClasspathElements() : mojo.getProject().getRuntimeClasspathElements());
             if (classpathElements != null) {
                 for (String e : classpathElements) {
                     if (e.endsWith(".jar")) {
