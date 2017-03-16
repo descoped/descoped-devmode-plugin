@@ -83,6 +83,16 @@ To run the plugin in context of plugin source code:
 
 `mvn clean install -DskipTests -Pmojo`
 
+
+# Release consideration
+
+Before performing a new release, make sure to:
+
+1) Update to the latest version (first entry of hotswapReleaseList) in MockHelper
+2) Make sure to run all tests locally to ensure that the hotswap agent matches your JDK
+3) Issue the test steps above first
+
+
 ## Known limitations
 
 * This project has not been tested on Windows. Only Linux is supported and partially MacOS.
