@@ -39,6 +39,7 @@ public class MockHelper {
 
         List<GitHubUrl> hotswapReleaseList = new ArrayList<>();
         hotswapReleaseList.add(new GitHubUrl("1.1.0-SNAPSHOT", "https://github.com/HotswapProjects/HotswapAgent/releases/download/1.1.0-SNAPSHOT/hotswap-agent-1.1.0-SNAPSHOT.jar"));
+        hotswapReleaseList.add(new GitHubUrl("1.0.1-SNAPSHOT", "https://github.com/HotswapProjects/HotswapAgent/releases/download/1.0.1-SNAPSHOT/hotswap-agent-1.0.1-SNAPSHOT.jar"));
         hotswapReleaseList.add(new GitHubUrl("1.0", "https://github.com/HotswapProjects/HotswapAgent/releases/download/1.0/hotswap-agent-1.0.jar"));
         hotswapReleaseList.add(new GitHubUrl("0.3.0-SNAPSHOT@2016/02/15", "https://github.com/HotswapProjects/HotswapAgent/releases/download/0.3.0-SNAPSHOT%402016/02/15/hotswap-agent.jar"));
         when(installer.getHotswapAgentReleaseList()).thenReturn(hotswapReleaseList);

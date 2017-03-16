@@ -104,7 +104,7 @@ public class GitHubReleasesTest {
         GitHubReleases releases = MockHelper.mockGitHubReleases();
         GitHubUrl latestVersion = releases.getHotswapAgentLatestReleaseVersion();
         List<GitHubUrl> urls = releases.getHotswapAgentReleaseList();
-        if (!CommonUtil.isTravisCI()) assertEquals(3, urls.size());
+        if (!CommonUtil.isTravisCI()) assertEquals(4, urls.size());
         GitHubUrl matchUrl = releases.findMatchingHotswapAgentVersion(urls);
         urls.forEach(url -> {
             boolean latest = (url.equalTo(latestVersion));
