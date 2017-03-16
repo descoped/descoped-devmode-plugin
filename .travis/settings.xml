@@ -3,13 +3,21 @@
     <servers>
         <server>
             <id>descoped</id>
-            <username>${env.CI_NEXUS_USER}</username>
-            <password>${env.CI_NEXUS_PWD}</password>
+            <username>${env.DESCOPED_NEXUS_USERNAME}</username>
+            <password>${env.DESCOPED_NEXUS_PASSWORD}</password>
         </server>
         <server>
             <id>descoped-snapshots</id>
-            <username>${env.CI_NEXUS_USER}</username>
-            <password>${env.CI_NEXUS_PWD}</password>
+            <username>${env.DESCOPED_NEXUS_USERNAME}</username>
+            <password>${env.DESCOPED_NEXUS_PASSWORD}</password>
         </server>
     </servers>
+
+    <mirrors>
+        <mirror>
+            <id>descoped.maven-public</id>
+            <url>https://repository.descoped.io/repository/maven-public/</url>
+            <mirrorOf>*</mirrorOf>
+        </mirror>
+    </mirrors>
 </settings>

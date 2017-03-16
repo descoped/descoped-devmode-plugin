@@ -22,7 +22,7 @@ Declare maven profile:
             <plugin>
                 <groupId>io.descoped.mojo</groupId>
                 <artifactId>web-devmode-plugin</artifactId>
-                <version>1.0.0-alpha1</version>
+                <version>1.0.0-alpha5</version>
                 <executions>
                     <execution>
                         <phase>compile</phase>
