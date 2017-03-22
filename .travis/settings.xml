@@ -20,4 +20,19 @@
             <mirrorOf>*</mirrorOf>
         </mirror>
     </mirrors>
+    <pluginGroups>
+        <pluginGroup>org.sonarsource.scanner.maven</pluginGroup>
+    </pluginGroups>
+    <profiles>
+        <profile>
+            <id>sonar</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <sonar.host.url>https://sonar.musific.com</sonar.host.url>
+                <sonar.login>${env.SONAR_TOKEN}</sonar.login>
+            </properties>
+        </profile>
+    </profiles>
 </settings>
