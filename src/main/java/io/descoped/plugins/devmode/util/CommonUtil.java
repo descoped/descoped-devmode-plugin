@@ -319,6 +319,7 @@ public class CommonUtil {
         }
 
         @Override
+        @SuppressWarnings("all")
         public void run() {
             long startTime = System.currentTimeMillis();
             while (true) {

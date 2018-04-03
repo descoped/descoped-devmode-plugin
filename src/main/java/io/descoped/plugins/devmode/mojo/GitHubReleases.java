@@ -93,7 +93,9 @@ public class GitHubReleases {
                 String tag2 = o2.getTag();
                 String major1 = tag1.substring(tag1.indexOf("jdk")+3, tag1.indexOf("u"));
                 String major2 = tag2.substring(tag2.indexOf("jdk")+3, tag2.indexOf("u"));
+                tag1 = (tag1.indexOf("+") > 0 ? tag1 : tag1 + "+");
                 String minor1 = tag1.substring(tag1.indexOf("u")+1, tag1.indexOf("+"));
+                tag2 = (tag2.indexOf("+") > 0 ? tag2 : tag2 + "+");
                 String minor2 = tag2.substring(tag2.indexOf("u")+1, tag2.indexOf("+"));
                 minor1 = (minor1.length() == 2 ? "0"+minor1 : minor1);
                 minor2 = (minor2.length() == 2 ? "0"+minor2 : minor2);
